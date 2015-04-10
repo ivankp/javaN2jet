@@ -39,7 +39,7 @@ class clusterSequence {
     public double dij(pseudoJet p) {
       double deltaPhi = Math.abs(phi-p.phi);
       if (deltaPhi > Math.PI) deltaPhi = 2*Math.PI - deltaPhi;
-      return Math.min(diB,p.diB)*( sq(rap-p.rap) + sq(deltaPhi) );
+      return Math.min(diB,p.diB)*( sq(rap-p.rap) + sq(deltaPhi) )/jetR2;
     }
 
     public String toString() {
@@ -65,7 +65,6 @@ class clusterSequence {
     int n_ok = n;
   
     pseudoJet[] pp = new pseudoJet[n];
-    boolean[]   ok = new boolean[n];
     double[][] dij = new double[n][n];
     List<ParticleD> jets = new ArrayList<ParticleD>();
   
@@ -75,7 +74,6 @@ class clusterSequence {
         particles.get(i).px(), particles.get(i).py(),
         particles.get(i).pz(), particles.get(i).e ()
       );
-      ok[i] = true;
     }
 
     // cache pairwise distances
@@ -92,8 +90,8 @@ class clusterSequence {
 
       // find smallest single distance
       for (int i=0; i<n; ++i) {
-        if (!ok[i]) continue;
-        double d = pp[i].diB*jetR2;
+        if (pp[i]==null) continue;
+        double d = pp[i].diB;
         if (d < dist) {
           dist = d;
           i1 = i;
@@ -102,12 +100,12 @@ class clusterSequence {
       
       // find closest pair
       for (int i=1, k=0; i<n; ++i) {
-        if (!ok[i]) {
+        if (pp[i]==null) {
           k += i;
           continue;
         }
         for (int j=0; j<i; ++j, ++k) {
-          if (!ok[j]) continue;
+          if (pp[j]==null) continue;
 
           double d = dij[i][j];
 
@@ -130,15 +128,15 @@ class clusterSequence {
         
         // "remove" merge particles
         pp[i1] = p;
-        ok[i2] = false;
+        pp[i2] = null;
 
         // cache new pairwise distances
         for (int i=0; i<i1; ++i) {
-          if (!ok[i]) continue;
+          if (pp[i]==null) continue;
           dij[i1][i] = pp[i].dij( pp[i1] );
         }
         for (int i=i1+1; i<n; ++i) {
-          if (!ok[i]) continue;
+          if (pp[i]==null) continue;
           dij[i][i1] = pp[i].dij( pp[i1] );
         }
 
@@ -151,7 +149,7 @@ class clusterSequence {
         //System.out.format("%3d is a Jet | d = %.8f\n", p.i, dist);
 
         // "remove"
-        ok[i1] = false;
+        pp[i1] = null;
       }
 
       --n_ok;

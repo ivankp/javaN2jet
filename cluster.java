@@ -33,16 +33,17 @@ class cluster {
     }
 
     // perform jet clustering
+    List<ParticleD> jets = null;
     for (int i=0; i<10; ++i) {
       long startTime = System.currentTimeMillis();
-      List<ParticleD> jets = seq.cluster(pp);
+      jets = seq.cluster(pp);
       System.out.println("Run time: " +
         (System.currentTimeMillis()-startTime) + " ms"
       );
     }
 
     // print
-    //Collections.sort(jets);
-    //for (ParticleD j: jets) System.out.format("%.8f\n",j.perp());
+    Collections.sort(jets);
+    for (ParticleD j: jets) System.out.format("%.8f\n",j.perp());
   }
 }
