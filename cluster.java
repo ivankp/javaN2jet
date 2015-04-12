@@ -20,7 +20,7 @@ class cluster {
     clusterSequence seq = new clusterSequence(
       kt_alg, Double.parseDouble(args[1])
     );
-    
+
     List<ParticleD> pp = new ArrayList<ParticleD>();
 
     // read input file and collect input particles
@@ -34,16 +34,16 @@ class cluster {
 
     // perform jet clustering
     List<ParticleD> jets = null;
-    for (int i=0; i<10; ++i) {
+    // for (int i=0; i<10; ++i) {
       long startTime = System.currentTimeMillis();
       jets = seq.cluster(pp);
       System.out.println("Run time: " +
         (System.currentTimeMillis()-startTime) + " ms"
       );
-    }
+    // }
 
     // print
     Collections.sort(jets);
-    for (ParticleD j: jets) System.out.format("%.8f\n",j.perp());
+    for (ParticleD j: jets) System.out.format("%.8e\n",j.perp());
   }
 }
