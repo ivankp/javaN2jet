@@ -47,7 +47,7 @@ class clusterSequence {
         px + near.px, py + near.py,
         pz + near.pz, E  + near.E );
       first.prev.next = first;
-      first.prev.near = this; // trick
+      // first.prev.near = this; // trick
       first = first.prev;
 
       this.remove();
@@ -147,8 +147,17 @@ class clusterSequence {
 
         // print clustering step
         // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, dist);
+        
+        // recompute pairwise distances for the new pseudoJet
+        for (pseudoJet q=first.next; q!=null; q=q.next) {
+          // the new particle is first
+          first.update_near_both(q);
+          if (q.near==first) q.update_dij();
+        }
+        first.update_dij();
 
-        for (pseudoJet p1=first; p1!=null; p1=p1.next) {
+        // recompute pairwise distances for the rest
+        for (pseudoJet p1=first.next; p1!=null; p1=p1.next) {
           if (p1.near==p || p1.near==p.near) {
             p1.Rij = Double.MAX_VALUE;
             for (pseudoJet p2=first; p2!=null; p2=p2.next) {
