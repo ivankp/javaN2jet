@@ -1,43 +1,79 @@
 import java.util.*;
 import java.io.*;
 
-class node {
+abstract class heapNode {
   int hi; // heap index
-  int data;
-
-  public node(int x) { data = x; }
+  Double obj;
+  abstract double val();
+  public heapNode(Double x) { obj = x; }
 }
 
 class minHeap {
-  private node[] heap;
+  private heapNode[] heap;
   private int last;
   
   public minHeap(int size) {
-    heap = new node[size];
+    heap = new heapNode[size];
     last = -1;
   }
-  
+
+/*
   private int child1(int i) { return (i<<1) + 1; }
   private int child2(int i) { return (i<<1) + 2; }
   private int parent(int i) { return ((i-1)>>1); }
+*/
   
-  // swap i into j
-  private int trickle(int i) {
+  public String toString() {
+    final int nl = binlog(last+1);
+    String out = new String("\n");
+
+    int h = 0;
+    for (int l=0; l<=nl; ++l) {
+      for (int e=0; e<Math.pow(2,l); ++e) {
+        if (e>0) for (int s=0; s<Math.pow(2,nl-l+1)-1; ++s) out += "  ";
+        else     for (int s=0; s<Math.pow(2,nl-l  )-1; ++s) out += "  ";
+        out += String.format("%2.0f",heap[h++].val());
+        if (h>last) break;
+      }
+      out += "\n";
+      if (h>last) break;
+    }
+
+    return out;
+  }
+  
+  private void swap(int i, int j) {
+    System.out.printf("%2d (%2.0f) <--> %2d (%2.0f)\n",i,heap[i].val(),j,heap[j].val());
+  
+    // swap nodes
+    heapNode a  = heap[i];
+    heap[i] = heap[j];
+    heap[j] = a;
+    
+    // swap heap indices
+    heap[i].hi = heap[i].hi + heap[j].hi;
+    heap[j].hi = heap[i].hi - heap[j].hi;
+    heap[i].hi = heap[i].hi - heap[j].hi;
+  }
+  
+  private int sift_up(int i) { // swap i with its parent
     if (i==0) return 0;
-    final int p = parent(i);
-    if (heap[i].data < heap[p].data) {
-      System.out.printf("%2d (%2d) <--> %2d (%2d)\n",i,heap[i].data,p,heap[p].data);
-      // swap nodes
-      node a  = heap[i];
-      heap[i] = heap[p];
-      heap[p] = a;
-      
-      // swap heap indices
-      heap[i].hi = heap[i].hi + heap[p].hi;
-      heap[p].hi = heap[i].hi - heap[p].hi;
-      heap[i].hi = heap[i].hi - heap[p].hi;
-      
+    final int p = ((i-1)>>1); // parent
+
+    if (heap[i].val() < heap[p].val()) {
+      swap(i,p);
       return p;
+    } else return i;
+  }
+  
+  private int sift_down(int i) { // swap i with its child
+    if (i==0) return 0;
+    final int c1 = (i<<1) + 1, c2 = c1+1; // children
+    final int c  = (heap[c1].val() < heap[c2].val() ? c1 : c2);
+
+    if (heap[c].val() < heap[i].val()) {
+      swap(i,c);
+      return c;
     } else return i;
   }
   
@@ -50,52 +86,34 @@ class minHeap {
     return log + ( bits >>> 1 );
   }
   
-  public void insert(node a) {
+  public void insert(heapNode a) {
     heap[++last] = a;
     if (last == 0) a.hi = last;
     else {
-      int i=last, j=trickle(i);
+      int i=last, j=sift_up(i);
       while (i!=j) {
         i = j;
-        j = trickle(i);
+        j = sift_up(i);
       }
     }
-    
-    for (int i=last, j=-1; i!=j; j=trickle(i)) { }
   }
   
-  public String toString() {
-    final int nl = binlog(last+1);
-    String out = new String("\n");
-    //for (int i=0;i<=last;++i)
-    //  out += String.format(" %2d",heap[i].data);
-
-    int h = 0;
-    for (int l=0; l<=nl; ++l) {
-      //out += String.format("%2d   ",l);
-      for (int e=0; e<Math.pow(2,l); ++e) {
-        if (e>0) for (int s=0; s<Math.pow(2,nl-l+1)-1; ++s) out += "  ";
-        else     for (int s=0; s<Math.pow(2,nl-l  )-1; ++s) out += "  ";
-        out += String.format("%2d",heap[h++].data);
-        if (h>last) break;
+  public heapNode remove(int i) {
+    if (last<i) return null;
+    else {
+      heapNode ret = heap[i];
+      heap[i]  = heap[--last];
+      heap[i].hi = i;
+      
+      int k=i, j=sift_down(k);
+      while (k!=j) {
+        k = j;
+        j = sift_down(k);
       }
-      out += "\n";
-      if (h>last) break;
+      
+      return ret;
     }
-
-    return out;
   }
   
-  public static void main(String[] args) throws IOException {
-    minHeap test = new minHeap(100);
-    test.insert(new node(50));
-    test.insert(new node(50));
-    test.insert(new node(50));
-    test.insert(new node(14));
-    test.insert(new node( 5));
-    test.insert(new node(23));
-    test.insert(new node( 2));
-    
-    System.out.println(test);
-  }
+  public heapNode pop() { return remove(0); }
 }
