@@ -5,7 +5,7 @@ abstract class heapNode {
   int hi; // heap index
   Double obj;
   abstract double val();
-  public heapNode(Double x) { obj = x; }
+  heapNode(Double x) { obj = x; }
 }
 
 class minHeap {
@@ -24,8 +24,10 @@ class minHeap {
 */
   
   public String toString() {
-    final int nl = binlog(last+1);
     String out = new String("\n");
+    
+    if (last<0) return out;
+    final int nl = binlog(last+1);
 
     int h = 0;
     for (int l=0; l<=nl; ++l) {
@@ -67,9 +69,11 @@ class minHeap {
   }
   
   private int sift_down(int i) { // swap i with its child
-    if (i==0) return 0;
+    System.out.printf("sift_down %2d (%2.0f)\n",i,heap[i].val());
+    
     final int c1 = (i<<1) + 1, c2 = c1+1; // children
-    final int c  = (heap[c1].val() < heap[c2].val() ? c1 : c2);
+    if (last<c1) return i;
+    final int c  = ( last<c2 ? c1 : (heap[c1].val() < heap[c2].val() ? c1 : c2) );
 
     if (heap[c].val() < heap[i].val()) {
       swap(i,c);
@@ -102,7 +106,7 @@ class minHeap {
     if (last<i) return null;
     else {
       heapNode ret = heap[i];
-      heap[i]  = heap[--last];
+      heap[i] = heap[last--];
       heap[i].hi = i;
       
       int k=i, j=sift_down(k);
