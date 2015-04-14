@@ -3,9 +3,7 @@ import java.io.*;
 
 abstract class heapNode {
   int hi; // heap index
-  Double obj;
   abstract double val();
-  heapNode(Double x) { obj = x; }
 }
 
 class minHeap {
@@ -69,7 +67,7 @@ class minHeap {
   }
   
   private int sift_down(int i) { // swap i with its child
-    System.out.printf("sift_down %2d (%2.0f)\n",i,heap[i].val());
+    // System.out.printf("sift_down %2d (%2.0f)\n",i,heap[i].val());
     
     final int c1 = (i<<1) + 1, c2 = c1+1; // children
     if (last<c1) return i;
@@ -94,10 +92,10 @@ class minHeap {
     heap[++last] = a;
     if (last == 0) a.hi = last;
     else {
-      int i=last, j=sift_up(i);
-      while (i!=j) {
-        i = j;
-        j = sift_up(i);
+      int k=last, j=sift_up(k);
+      while (k!=j) {
+        k = j;
+        j = sift_up(k);
       }
     }
   }
@@ -109,7 +107,13 @@ class minHeap {
       heap[i] = heap[last--];
       heap[i].hi = i;
       
-      int k=i, j=sift_down(k);
+      int k=i, j=sift_up(k);
+      while (k!=j) {
+        k = j;
+        j = sift_up(k);
+      }
+      
+      k=i; j=sift_down(k);
       while (k!=j) {
         k = j;
         j = sift_down(k);
@@ -119,5 +123,36 @@ class minHeap {
     }
   }
   
-  public heapNode pop() { return remove(0); }
+  public heapNode pop() {
+    if (last<0) return null;
+    else {
+      heapNode ret = heap[0];
+      heap[0] = heap[last--];
+      heap[0].hi = 0;
+      
+      int k=0, j=sift_down(k);
+      while (k!=j) {
+        k = j;
+        j = sift_down(k);
+      }
+      
+      return ret;
+    }
+  }
+  
+  public void update(int i) {
+    if (i<=last) {
+      int k=i, j=sift_up(k);
+      while (k!=j) {
+        k = j;
+        j = sift_up(k);
+      }
+      
+      k=i; j=sift_down(k);
+      while (k!=j) {
+        k = j;
+        j = sift_down(k);
+      }
+    }
+  }
 }
