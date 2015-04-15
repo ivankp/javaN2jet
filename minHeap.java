@@ -4,6 +4,7 @@ import java.io.*;
 abstract class heapNode {
   int hi; // heap index
   abstract double val();
+  abstract int lbl();
 }
 
 class minHeap {
@@ -32,7 +33,8 @@ class minHeap {
       for (int e=0; e<Math.pow(2,l); ++e) {
         if (e>0) for (int s=0; s<Math.pow(2,nl-l+1)-1; ++s) out += "  ";
         else     for (int s=0; s<Math.pow(2,nl-l  )-1; ++s) out += "  ";
-        out += String.format("%2.0f",heap[h++].val());
+        // out += String.format("%2.0f",heap[h++].val());
+        out += String.format("%2d",heap[h++].lbl());
         if (h>last) break;
       }
       out += "\n";
@@ -43,7 +45,7 @@ class minHeap {
   }
   
   private void swap(int i, int j) {
-    System.out.printf("%2d (%2.0f) <--> %2d (%2.0f)\n",i,heap[i].val(),j,heap[j].val());
+    // System.out.printf("%2d (%2.0f) <--> %2d (%2.0f)\n",i,heap[i].val(),j,heap[j].val());
   
     // swap nodes
     heapNode a  = heap[i];
@@ -89,14 +91,12 @@ class minHeap {
   }
   
   public void insert(heapNode a) {
-    heap[++last] = a;
-    if (last == 0) a.hi = last;
-    else {
-      int k=last, j=sift_up(k);
-      while (k!=j) {
-        k = j;
-        j = sift_up(k);
-      }
+    heap[a.hi = ++last] = a;
+
+    int k=last, j=sift_up(k);
+    while (k!=j) {
+      k = j;
+      j = sift_up(k);
     }
   }
   
@@ -154,5 +154,9 @@ class minHeap {
         j = sift_down(k);
       }
     }
+  }
+  
+  public double min() {
+    return heap[0].val();
   }
 }

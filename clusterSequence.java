@@ -16,6 +16,8 @@ class clusterSequence {
     public double px, py, pz, E, rap, phi, Rij, diB, dij;
     public int id;
     public pseudoJet prev, next, near;
+    diBNode hiB;
+    dijNode hij;
 
     public pseudoJet(double px, double py, double pz, double E) {
       this.px = px;
@@ -77,6 +79,7 @@ class clusterSequence {
   }
 
   private pseudoJet first;
+  private minHeap diBHeap, dijHeap;
 
   /**
    * Constructor
@@ -86,7 +89,23 @@ class clusterSequence {
     this.jetR2  = jetR*jetR;
     first = null;
   }
-
+  
+  private abstract class pseudoJetNode extends heapNode {
+    pseudoJet p;
+    pseudoJetNode(pseudoJet p) { this.p = p; }
+    int lbl() { return p.id; }
+  }
+  
+  private class diBNode extends pseudoJetNode {
+    diBNode(pseudoJet p) { super(p); this.p.hiB = this; }
+    double val() { return p.diB; }
+  }
+  
+  private class dijNode extends pseudoJetNode {
+    dijNode(pseudoJet p) { super(p); this.p.hij = this; }
+    double val() { return p.dij; }
+  }
+  
   /**
    * clustering function
    */
@@ -95,6 +114,8 @@ class clusterSequence {
     num = 0;
 
     List<ParticleD> jets = new ArrayList<ParticleD>();
+    diBHeap = new minHeap(n);
+    dijHeap = new minHeap(n);
     pseudoJet p;
 
     if (n==0) return jets;
@@ -122,39 +143,48 @@ class clusterSequence {
     // calculate minimum pairwise distances
     for (p=first; p!=null; p=p.next) {
       p.update_dij();
+      diBHeap.insert(new diBNode(p));
+      dijHeap.insert(new dijNode(p));
       // System.out.println(p.dij);
     }
 
-    boolean merge = false;
-
     // loop until pseudoJet are used up
     while (first != null) {
-
-      double dist = Double.MAX_VALUE;
-
-      // find smallest distance
-      for (pseudoJet q=first; q!=null; q=q.next) {
-        if (q.diB < dist) { p = q; dist = q.diB; merge = false; }
-        if (q.dij < dist) { p = q; dist = q.dij; merge = true;  }
-        // System.out.format("%3d: %.8e %3d %.8e\n",q.id,q.diB,q.near.id,q.dij);
-      }
+    
+      // System.out.print(diBHeap);
+      // System.out.print(dijHeap);
 
       // Either merge or identify a jet
-      if (merge) {
+      if (dijHeap.min() < diBHeap.min()) { // merge
+
+        p = ( (dijNode)dijHeap.pop() ).p;
+        // System.out.printf("popped %2d, hiB=%2d, hij=%2d\n",p.id,p.hiB.hi,p.hij.hi);
+        
+        dijHeap.remove(p.near.hij.hi);
+        diBHeap.remove(p.hiB.hi);
+        diBHeap.remove(p.near.hiB.hi);
 
         // merge particles
+        // the combined pseudoJet is first
         p.merge();
+        diBHeap.insert(new diBNode(first));
+        dijHeap.insert(new dijNode(first));
+        
 
         // print clustering step
-        // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, dist);
+        // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, p.dij);
         
         // recompute pairwise distances for the new pseudoJet
         for (pseudoJet q=first.next; q!=null; q=q.next) {
           // the new particle is first
           first.update_near_both(q);
-          if (q.near==first) q.update_dij();
+          if (q.near==first) {
+            q.update_dij();
+            dijHeap.update(q.hij.hi);
+          }
         }
         first.update_dij();
+        dijHeap.update(first.hij.hi);
 
         // recompute pairwise distances for the rest
         for (pseudoJet p1=first.next; p1!=null; p1=p1.next) {
@@ -164,19 +194,23 @@ class clusterSequence {
               if (p1!=p2) p1.update_near(p2);
             }
             p1.update_dij();
+            dijHeap.update(p1.hij.hi);
           }
         }
 
-      } else {
+      } else { // Jet
+      
+        p = ( (diBNode)diBHeap.pop() ).p;
+        // System.out.printf("popped %2d, hiB=%2d, hij=%2d\n",p.id,p.hiB.hi,p.hij.hi);
+        
+        dijHeap.remove(p.hij.hi);
+        p.remove();
+      
         // identify as jet
         jets.add( new ParticleD( p.px, p.py, p.pz, p.E ) );
 
         // print clustering step
-        // System.out.format("%3d Jet   | d = %.5e\n", p.id, dist);
-
-        // "remove"
-        p.remove();
-        // System.out.printf("p.id = %3d\n",p.id);
+        // System.out.format("%3d Jet   | d = %.5e\n", p.id, p.diB);
 
         // recompute pairwise distances
         for (pseudoJet p1=first; p1!=null; p1=p1.next) {
@@ -188,6 +222,7 @@ class clusterSequence {
               if (p1!=p2) p1.update_near(p2);
             }
             p1.update_dij();
+            dijHeap.update(p1.hij.hi);
             // System.out.println();
           }
         }
