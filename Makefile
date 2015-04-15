@@ -8,4 +8,4 @@ cluster.class: ParticleD.java cluster.java clusterSequence.java
 	javac $^
 
 clean:
-	rm -f $(wildcard *.class)
+	@rm -fv $(addprefix ', $(addsuffix ', $(wildcard *.class)))
