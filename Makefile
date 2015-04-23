@@ -4,7 +4,7 @@ CLASS = cluster.class
 
 all: $(CLASS)
 
-cluster.class: ParticleD.java cluster.java clusterSequence.java
+cluster.class: cluster.java clusterSequence.java ParticleD.java
 	javac $^
 
 clean:
