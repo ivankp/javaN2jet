@@ -18,6 +18,12 @@ class clusterSequence {
   private pseudoJet first;
   private tileGrid grid;
   
+  private int testNumJets() {
+    int n = 0;
+    for (pseudoJet p=first; p!=null; p=p.next) ++n;
+    return n;
+  }
+  
   // ****************************************************************
   // pseudoJet class ************************************************
   private class pseudoJet {
@@ -110,19 +116,22 @@ class clusterSequence {
     private final int nrap, nphi;
     private final double d, r;
     private final double max_rap;
+    private final int nk;
 
     public tileGrid(double R, double max_rap) {
-      nphi = (int)(twopi/R);
+      int _nphi = (int)(twopi/R);
+      nphi = (_nphi%2==0 ? _nphi+1 : _nphi );
+      nk = (nphi>>1);
       d = twopi/nphi;
       r = d/2;
       int half_nrap = (int)(max_rap/r) + 1;
       this.max_rap = half_nrap*d;
       nrap = 2*half_nrap;
       
-      tiles = new tile[nrap][nphi];
+      tiles = new tile[nphi][nrap];
       for (int irap=0; irap<nrap; ++irap)
         for (int iphi=0; iphi<nphi; ++iphi)
-          tiles[irap][iphi] = new tile(
+          tiles[iphi][irap] = new tile(
             irap, iphi,
             (irap-nrap/2)*d + r, iphi*d + r
           );
@@ -133,7 +142,7 @@ class clusterSequence {
       if (irap < 0) irap = 0;
       else if (irap >= nrap) irap = nrap-1;
 
-      p.t = tiles[ irap ][ (int)(p.phi/d) ];
+      p.t = tiles[ (int)(p.phi/d) ][ irap ];
       
       if (p.t.first==null) {
         p.t.first = p;
@@ -143,7 +152,7 @@ class clusterSequence {
         p.t.first = p;
       }
 
-      p.RiC1 = sq(p.t.crap-p.rap) + sq(p.t.cphi-p.phi);
+      p.RiC1 = Math.sqrt( sq(p.t.crap-p.rap) + sq(p.t.cphi-p.phi) );
     }
 
     private void within_tile(pseudoJet p, tile t, boolean both) {
@@ -153,9 +162,7 @@ class clusterSequence {
     }
 
     public void update_near(pseudoJet p, boolean both) {
-      final int nk = (nphi>>1);
-
-      for (int k=0; k<nk; ++k) {
+      for (int k=0; k<=nk; ++k) {
         final int iphi_min = p.t.iphi - k,
                   iphi_max = p.t.iphi + k,
                   irap_min = p.t.irap - k,
@@ -164,30 +171,34 @@ class clusterSequence {
         int i = iphi_min;
 
         for (int j=Math.max(irap_min,0); j<=Math.min(irap_max,nrap-1); ++j)
-          within_tile(p, tiles[j][mod(i,nphi)], both);
+          within_tile(p, tiles[mod(i,nphi)][j], both);
 
         for (++i; i<iphi_max; ++i) {
-          if (irap_min>=0)   within_tile(p, tiles[irap_min][mod(i,nphi)], both);
-          if (irap_max<nrap) within_tile(p, tiles[irap_max][mod(i,nphi)], both);
+          if (irap_min>=0)   within_tile(p, tiles[mod(i,nphi)][irap_min], both);
+          if (irap_max<nrap) within_tile(p, tiles[mod(i,nphi)][irap_max], both);
         }
 
         if (k>0)
           for (int j=Math.max(irap_min,0); j<=Math.min(irap_max,nrap-1); ++j)
-            within_tile(p, tiles[j][mod(i,nphi)], both);
+            within_tile(p, tiles[mod(i,nphi)][j], both);
 
-        if (p.Rij < (p.RiC1 + r*k)) return;
+        if (p.Rij < (p.RiC1 + r*k)) {
+          //System.out.printf("%2d %5d\n",k,testNumJets());
+          return;
+        }
       }
       
       // left loop
       for (int j=0; j<p.t.irap-nk; ++j)
         for (int i=0; i<nphi; ++i)
-          within_tile(p, tiles[j][i], both);
+          within_tile(p, tiles[i][j], both);
           
       // right loop
       for (int j=p.t.irap+nk+1; j<nrap; ++j)
         for (int i=0; i<nphi; ++i)
-          within_tile(p, tiles[j][i], both);
+          within_tile(p, tiles[i][j], both);
 
+      //System.out.printf("%2d %5d\n",nk,testNumJets());
     }
   }
   
@@ -203,10 +214,11 @@ class clusterSequence {
   // ****************************************************************
   // clustering function ********************************************
   public List<ParticleD> cluster(List<ParticleD> particles) {
-    final int n = particles.size();
+    int n = particles.size();
     num = 0; // start assigning pseudoJet id from 0
     
-    grid = new tileGrid(jetR,5);
+    // initialize the grid
+    if (n>50) grid = new tileGrid(jetR,5);
 
     List<ParticleD> jets = new ArrayList<ParticleD>();
     pseudoJet p;
@@ -254,6 +266,8 @@ class clusterSequence {
 
     // loop until pseudoJets are used up ------------------
     while (first != null) {
+    
+      if (n<50) grid = null;
 
       double dist = Double.MAX_VALUE;
 
@@ -352,6 +366,8 @@ class clusterSequence {
         }
 
       }
+      
+      --n;
 
     }
 
