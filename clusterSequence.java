@@ -47,13 +47,9 @@ class clusterSequence {
 
       diB = (kt_alg ? pt2() : 1./pt2());
       Rij = Double.MAX_VALUE;
-
-      // System.out.printf("%3d: diB %.8e\n",id,diB);
     }
 
     public void remove() {
-      // System.out.printf("removing %3d\n",id);
-
       if (prev==null) first = next;
       else prev.next = next;
       if (next!=null) next.prev = prev;
@@ -156,8 +152,6 @@ class clusterSequence {
     }
 
     private void within_tile(pseudoJet p, tile t, boolean both) {
-      //System.out.printf("%2d p(%2d,%2d) t(%2d,%2d)\n",p.id,p.t.iphi,p.t.irap,t.iphi,t.irap);
-    
       if (t.first!=null) {
         double dphi = 0, drap = 0;
         
@@ -206,10 +200,7 @@ class clusterSequence {
           for (int j=Math.max(irap_min,0); j<=Math.min(irap_max,nrap-1); ++j)
             within_tile(p, tiles[mod(i,nphi)][j], both);
 
-        if ( Math.sqrt(p.Rij) < (p.RiC1 + d*k) ) {
-          //System.out.printf("%2d %5d\n",k,testNumJets());
-          return;
-        }
+        if ( Math.sqrt(p.Rij) < (p.RiC1 + d*k) ) return;
       }
       
       // left loop
@@ -222,7 +213,6 @@ class clusterSequence {
         for (int i=0; i<nphi; ++i)
           within_tile(p, tiles[i][j], both);
 
-      //System.out.printf("%2d %5d\n",nk,testNumJets());
     }
   }
   
@@ -281,10 +271,7 @@ class clusterSequence {
     }
 
     // calculate minimum pairwise distances ---------------
-    for (p=first; p!=null; p=p.next) {
-      p.update_dij();
-      // System.out.println(p.dij);
-    }
+    for (p=first; p!=null; p=p.next) p.update_dij();
 
     boolean merge = false;
 
@@ -299,7 +286,6 @@ class clusterSequence {
       for (pseudoJet q=first; q!=null; q=q.next) {
         if (q.diB < dist) { p = q; dist = q.diB; merge = false; }
         if (q.dij < dist) { p = q; dist = q.dij; merge = true;  }
-        // System.out.format("%3d: %.8e %3d %.8e\n",q.id,q.diB,q.near.id,q.dij);
       }
 
       // Either merge or identify a jet
@@ -359,21 +345,17 @@ class clusterSequence {
 
         // "remove"
         p.remove();
-        // System.out.printf("p.id = %3d\n",p.id);
 
         // recompute pairwise distances
         if (grid==null) { // no grid
         
           for (pseudoJet p1=first; p1!=null; p1=p1.next) {
-            // System.out.printf("%3d near %3d\n",p1.id,p1.near.id);
             if (p1.near==p) {
               p1.Rij = Double.MAX_VALUE;
               for (pseudoJet p2=first; p2!=null; p2=p2.next) {
-                // System.out.print(".");
                 if (p1!=p2) p1.update_near(p2,false);
               }
               p1.update_dij();
-              // System.out.println();
             }
           }
           
