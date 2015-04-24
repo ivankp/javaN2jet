@@ -159,21 +159,18 @@ class clusterSequence {
       //System.out.printf("%2d p(%2d,%2d) t(%2d,%2d)\n",p.id,p.t.iphi,p.t.irap,t.iphi,t.irap);
     
       if (t.first!=null) {
-        /*double dphi = 0, drap = 0;
-
-        if (t.iphi < p.t.iphi) {
-          dphi = p.phi - t.cphi - r;
-        } else if (t.iphi > p.t.iphi) {
-          dphi = t.cphi - p.phi - r;
+        double dphi = 0, drap = 0;
+        
+        if (t.iphi != p.t.iphi) {
+          dphi = Math.abs(p.phi - t.cphi);
+          if (dphi > Math.PI) dphi = twopi - dphi;
+          dphi -= r;
         }
-
-        if (t.irap < p.t.irap) {
-          drap = p.phi - t.crap - r;
-        } else if (t.irap > p.t.irap) {
-          drap = t.crap - p.rap - r;
+        if (t.irap != p.t.irap) {
+          drap = Math.abs(p.rap - t.crap) - r;
         }
         
-        if ( p.Rij >= sq(dphi) + sq(drap) )*/
+        if ( p.Rij >= sq(dphi) + sq(drap) )
           for (pseudoJet q=t.first; q!=null; q=q.tnext)
             if (p.update_near(q, both)) q.update_dij();
       }
