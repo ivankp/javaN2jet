@@ -116,12 +116,12 @@ class clusterSequence {
     private final int nrap, nphi;
     private final double d, r;
     private final double max_rap;
-    private final int nk;
+    private final int ng;
 
     public tileGrid(double R, double max_rap) {
       int _nphi = (int)(twopi/R);
       nphi = (_nphi%2==0 ? _nphi+1 : _nphi );
-      nk = (nphi>>1);
+      ng = (nphi>>1);
       d = twopi/nphi;
       r = d/2;
       int half_nrap = (int)(max_rap/r) + 1;
@@ -156,13 +156,40 @@ class clusterSequence {
     }
 
     private void within_tile(pseudoJet p, tile t, boolean both) {
-      for (pseudoJet q=t.first; q!=null; q=q.next)
+      //System.out.printf("%2d p(%2d,%2d) t(%2d,%2d)\n",p.id,p.t.iphi,p.t.irap,t.iphi,t.irap);
+    
+      if (t.first!=null) {
+        /*double dphi = 0, drap = 0;
+
+        if (t.iphi < p.t.iphi) {
+          dphi = p.phi - t.cphi - r;
+        } else if (t.iphi > p.t.iphi) {
+          dphi = t.cphi - p.phi - r;
+        }
+
+        if (t.irap < p.t.irap) {
+          drap = p.phi - t.crap - r;
+        } else if (t.irap > p.t.irap) {
+          drap = t.crap - p.rap - r;
+        }
+        
+        if ( p.Rij >= sq(dphi) + sq(drap) )*/
+          for (pseudoJet q=t.first; q!=null; q=q.tnext)
+            if (p.update_near(q, both)) q.update_dij();
+      }
+    }
+
+    private void within_tile_same(pseudoJet p, boolean both) {
+      for (pseudoJet q=p.t.first; q!=null; q=q.tnext)
         if (q!=p)
           if (p.update_near(q, both)) q.update_dij();
     }
 
     public void update_near(pseudoJet p, boolean both) {
-      for (int k=0; k<=nk; ++k) {
+      within_tile_same(p, both);
+      if ( p.Rij < sq(p.RiC1) ) return;
+    
+      for (int k=1; k<=ng; ++k) {
         final int iphi_min = p.t.iphi - k,
                   iphi_max = p.t.iphi + k,
                   irap_min = p.t.irap - k,
@@ -178,23 +205,23 @@ class clusterSequence {
           if (irap_max<nrap) within_tile(p, tiles[mod(i,nphi)][irap_max], both);
         }
 
-        if (k>0)
+        //if (k>0)
           for (int j=Math.max(irap_min,0); j<=Math.min(irap_max,nrap-1); ++j)
             within_tile(p, tiles[mod(i,nphi)][j], both);
 
-        if (p.Rij < (p.RiC1 + r*k)) {
+        if ( Math.sqrt(p.Rij) < (p.RiC1 + d*k) ) {
           //System.out.printf("%2d %5d\n",k,testNumJets());
           return;
         }
       }
       
       // left loop
-      for (int j=0; j<p.t.irap-nk; ++j)
+      for (int j=0; j<p.t.irap-ng; ++j)
         for (int i=0; i<nphi; ++i)
           within_tile(p, tiles[i][j], both);
           
       // right loop
-      for (int j=p.t.irap+nk+1; j<nrap; ++j)
+      for (int j=p.t.irap+ng+1; j<nrap; ++j)
         for (int i=0; i<nphi; ++i)
           within_tile(p, tiles[i][j], both);
 
