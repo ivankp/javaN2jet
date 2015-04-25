@@ -27,7 +27,7 @@ class clusterSequence {
   // pseudoJet class ************************************************
   private class pseudoJet {
     public double px, py, pz, E, rap, phi, Rij, diB, dij;
-    public int id;
+    public int id, np;
     public pseudoJet prev, next, near;
     public tile t;
     public pseudoJet tprev, tnext;
@@ -38,6 +38,7 @@ class clusterSequence {
       this.pz = pz;
       this.E  = E;
       this.id = num++;
+      this.np = 1; // number of constituent particles
 
       if (E==pz) rap = Double.MAX_VALUE;
       else if (E==-pz) rap = -Double.MAX_VALUE;
@@ -66,6 +67,8 @@ class clusterSequence {
         pz + near.pz, E  + near.E );
       first.prev.next = first;
       first = first.prev;
+
+      first.np = this.np + near.np;
 
       this.remove();
       near.remove();
@@ -226,16 +229,16 @@ class clusterSequence {
     }
 
     // find original nearest neighbors --------------------
-    if (!use_grid) { // no grid
+    if (use_grid) { // using grid
+
+      for (p=first; p!=null; p=p.next)
+        grid.update_near(p,false);
+
+    } else { // no grid
 
       for (p=first.next; p!=null; p=p.next)
         for (pseudoJet q=first; q!=p; q=q.next)
           p.update_near(q,true);
-
-    } else { // using grid
-
-      for (p=first; p!=null; p=p.next)
-        grid.update_near(p,false);
 
     }
 
@@ -270,7 +273,22 @@ class clusterSequence {
         // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, dist);
 
         // recompute pairwise distances
-        if (!use_grid) { // no grid
+        if (use_grid) { // using grid
+
+          // for the new pseudoJet
+          grid.update_near(first,true);
+          first.update_dij();
+
+          // for the rest
+          for (pseudoJet p1=first.next; p1!=null; p1=p1.next) {
+            if (p1.near==p || p1.near==p.near) {
+              p1.rm_near();
+              grid.update_near(p1,false);
+              p1.update_dij();
+            }
+          }
+
+        } else { // no grid
 
           // for the new pseudoJet
           for (pseudoJet q=first.next; q!=null; q=q.next)
@@ -288,21 +306,6 @@ class clusterSequence {
             }
           }
 
-        } else { // using grid
-
-          // for the new pseudoJet
-          grid.update_near(first,true);
-          first.update_dij();
-
-          // for the rest
-          for (pseudoJet p1=first.next; p1!=null; p1=p1.next) {
-            if (p1.near==p || p1.near==p.near) {
-              p1.rm_near();
-              grid.update_near(p1,false);
-              p1.update_dij();
-            }
-          }
-
         }
 
       } else {
@@ -316,7 +319,17 @@ class clusterSequence {
         p.remove();
 
         // recompute pairwise distances
-        if (!use_grid) { // no grid
+        if (use_grid) { // using grid
+
+          for (pseudoJet p1=first; p1!=null; p1=p1.next) {
+            if (p1.near==p) {
+              p1.rm_near();
+              grid.update_near(p1,false);
+              p1.update_dij();
+            }
+          }
+
+        } else { // no grid
 
           for (pseudoJet p1=first; p1!=null; p1=p1.next) {
             if (p1.near==p) {
@@ -324,16 +337,6 @@ class clusterSequence {
               for (pseudoJet p2=first; p2!=null; p2=p2.next) {
                 if (p1!=p2) p1.update_near(p2,false);
               }
-              p1.update_dij();
-            }
-          }
-
-        } else { // using grid
-
-          for (pseudoJet p1=first; p1!=null; p1=p1.next) {
-            if (p1.near==p) {
-              p1.rm_near();
-              grid.update_near(p1,false);
               p1.update_dij();
             }
           }
