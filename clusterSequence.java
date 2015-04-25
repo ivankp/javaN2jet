@@ -7,11 +7,21 @@ class clusterSequence {
   private static double sq(double x) { return x*x; }
 
   private boolean kt_alg;
-  private double  jetR, jetR2;
+  private double  jetR2;
   private int     num;
 
   private pseudoJet first;
   private tileGrid grid;
+  private boolean use_grid;
+
+  // ****************************************************************
+  // Constructor ****************************************************
+  public clusterSequence(boolean kt_alg, double jetR) {
+    this.kt_alg = kt_alg;
+    this.jetR2  = jetR*jetR;
+
+    grid = new tileGrid(jetR,5);
+  }
 
   // ****************************************************************
   // pseudoJet class ************************************************
@@ -43,7 +53,7 @@ class clusterSequence {
       else prev.next = next;
       if (next!=null) next.prev = prev;
 
-      if (grid!=null) {
+      if (use_grid) {
         if (tprev==null) t.first = tnext;
         else tprev.tnext = tnext;
         if (tnext!=null) tnext.tprev = tprev;
@@ -91,13 +101,13 @@ class clusterSequence {
   // tile class *****************************************************
   class tile {
     int irap, iphi;
-    double crap, cphi; // center coordinates
+    double rapc, phic; // center coordinates
     pseudoJet first;
-    tile(int irap, int iphi, double crap, double cphi) {
+    tile(int irap, int iphi, double rapc, double phic) {
       this.irap = irap;
       this.iphi = iphi;
-      this.crap = crap;
-      this.cphi = cphi;
+      this.rapc = rapc;
+      this.phic = phic;
     }
   }
 
@@ -123,6 +133,12 @@ class clusterSequence {
             irap, iphi,
             (irap-nrap/2)*d + r, iphi*d + r
           );
+    }
+
+    public void clear() {
+      for (int irap=0; irap<nrap; ++irap)
+        for (int iphi=0; iphi<nphi; ++iphi)
+          tiles[iphi][irap].first = null;
     }
 
     public void add(pseudoJet p) {
@@ -153,10 +169,10 @@ class clusterSequence {
           if (p.update_near(q, both)) q.update_dij();
 
       final boolean // lazy
-        tl = ( sq(p.phi-p.t.cphi+r) < p.Rij ),
-        tr = ( sq(p.phi-p.t.cphi-r) < p.Rij ),
-        td = ( sq(p.rap-p.t.crap+r) < p.Rij ),
-        tu = ( sq(p.rap-p.t.crap-r) < p.Rij );
+        tl = ( sq(p.phi-p.t.phic+r) < p.Rij ),
+        tr = ( sq(p.phi-p.t.phic-r) < p.Rij ),
+        td = ( sq(p.rap-p.t.rapc+r) < p.Rij ),
+        tu = ( sq(p.rap-p.t.rapc-r) < p.Rij );
 
       if (p.t.irap!=0) {
         if (tl) { within_tile(p, tiles[p.t.iphi][p.t.irap-1], both);
@@ -179,22 +195,13 @@ class clusterSequence {
   }
 
   // ****************************************************************
-  // Constructor ****************************************************
-  public clusterSequence(boolean kt_alg, double jetR) {
-    this.kt_alg = kt_alg;
-    this.jetR   = jetR;
-    this.jetR2  = jetR*jetR;
-    first = null;
-  }
-
-  // ****************************************************************
   // clustering function ********************************************
   public List<ParticleD> cluster(List<ParticleD> particles) {
     int n = particles.size();
     num = 0; // start assigning pseudoJet id from 0
 
     // initialize the grid
-    if (n>50) grid = new tileGrid(jetR,5);
+    use_grid = (n>50);
 
     List<ParticleD> jets = new ArrayList<ParticleD>();
     pseudoJet p;
@@ -207,7 +214,7 @@ class clusterSequence {
       particles.get(0).pz(), particles.get(0).e ()
     );
     p = first;
-    if (grid!=null) grid.add(p);
+    if (use_grid) grid.add(p);
     for (int i=1; i<n; ++i) {
       p.next = new pseudoJet(
         particles.get(i).px(), particles.get(i).py(),
@@ -215,11 +222,11 @@ class clusterSequence {
       );
       p.next.prev = p;
       p = p.next;
-      if (grid!=null) grid.add(p);
+      if (use_grid) grid.add(p);
     }
 
     // find original nearest neighbors --------------------
-    if (grid==null) { // no grid
+    if (!use_grid) { // no grid
 
       for (p=first.next; p!=null; p=p.next)
         for (pseudoJet q=first; q!=p; q=q.next)
@@ -240,7 +247,7 @@ class clusterSequence {
     // loop until pseudoJets are used up ------------------
     while (first != null) {
 
-      if (n<50) grid = null;
+      if (n<50) use_grid = false;
 
       double dist = Double.MAX_VALUE;
 
@@ -257,13 +264,13 @@ class clusterSequence {
         p.merge();
 
         // the new particle is first
-        if (grid!=null) grid.add(first);
+        if (use_grid) grid.add(first);
 
         // print clustering step
         // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, dist);
 
         // recompute pairwise distances
-        if (grid==null) { // no grid
+        if (!use_grid) { // no grid
 
           // for the new pseudoJet
           for (pseudoJet q=first.next; q!=null; q=q.next)
@@ -309,7 +316,7 @@ class clusterSequence {
         p.remove();
 
         // recompute pairwise distances
-        if (grid==null) { // no grid
+        if (!use_grid) { // no grid
 
           for (pseudoJet p1=first; p1!=null; p1=p1.next) {
             if (p1.near==p) {
@@ -338,6 +345,10 @@ class clusterSequence {
       --n;
 
     }
+
+    // remove all particles --------------------------
+    first = null;
+    grid.clear();
 
     return jets;
   }
