@@ -3,13 +3,8 @@ import java.io.*;
 
 class clusterSequence {
 
-  private static double sq(double x) { return x*x; }
-  
-  private static int mod(int i, int n) {
-    return ( (i%=n) < 0 ? i+n : i );
-  }
-  
   private final static double twopi = 2*Math.PI;
+  private static double sq(double x) { return x*x; }
 
   private boolean kt_alg;
   private double  jetR, jetR2;
@@ -17,17 +12,11 @@ class clusterSequence {
 
   private pseudoJet first;
   private tileGrid grid;
-  
-  private int testNumJets() {
-    int n = 0;
-    for (pseudoJet p=first; p!=null; p=p.next) ++n;
-    return n;
-  }
-  
+
   // ****************************************************************
   // pseudoJet class ************************************************
   private class pseudoJet {
-    public double px, py, pz, E, rap, phi, Rij, diB, dij, RiC1;
+    public double px, py, pz, E, rap, phi, Rij, diB, dij;
     public int id;
     public pseudoJet prev, next, near;
     public tile t;
@@ -67,7 +56,7 @@ class clusterSequence {
         pz + near.pz, E  + near.E );
       first.prev.next = first;
       first = first.prev;
-      
+
       this.remove();
       near.remove();
     }
@@ -87,15 +76,22 @@ class clusterSequence {
     }
 
     public void update_dij() {
-      dij = Math.min(diB,near.diB)*Rij/jetR2;
+      if (near==null) dij = Double.MAX_VALUE;
+      else dij = Math.min(diB,near.diB)*Rij/jetR2;
+    }
+
+    public void rm_near() {
+      near = null;
+      Rij  = Double.MAX_VALUE;
+      //dij  = Double.MAX_VALUE;
     }
   }
-  
+
   // ****************************************************************
   // tile class *****************************************************
   class tile {
     int irap, iphi;
-    double crap, cphi;
+    double crap, cphi; // center coordinates
     pseudoJet first;
     tile(int irap, int iphi, double crap, double cphi) {
       this.irap = irap;
@@ -112,18 +108,14 @@ class clusterSequence {
     private final int nrap, nphi;
     private final double d, r;
     private final double max_rap;
-    private final int ng;
 
     public tileGrid(double R, double max_rap) {
-      int _nphi = (int)(twopi/R);
-      nphi = (_nphi%2==0 ? _nphi+1 : _nphi );
-      ng = (nphi>>1);
+      nphi = (int)(twopi/R);
       d = twopi/nphi;
       r = d/2;
-      int half_nrap = (int)(max_rap/r) + 1;
-      this.max_rap = half_nrap*d;
-      nrap = 2*half_nrap;
-      
+      nrap = 2*((int)(max_rap/r) + 1);
+      this.max_rap = nrap*r;
+
       tiles = new tile[nphi][nrap];
       for (int irap=0; irap<nrap; ++irap)
         for (int iphi=0; iphi<nphi; ++iphi)
@@ -139,7 +131,7 @@ class clusterSequence {
       else if (irap >= nrap) irap = nrap-1;
 
       p.t = tiles[ (int)(p.phi/d) ][ irap ];
-      
+
       if (p.t.first==null) {
         p.t.first = p;
       } else {
@@ -147,75 +139,45 @@ class clusterSequence {
         p.t.first.tprev = p;
         p.t.first = p;
       }
-
-      p.RiC1 = Math.sqrt( sq(p.t.crap-p.rap) + sq(p.t.cphi-p.phi) );
     }
 
     private void within_tile(pseudoJet p, tile t, boolean both) {
-      if (t.first!=null) {
-        double dphi = 0, drap = 0;
-        
-        if (t.iphi != p.t.iphi) {
-          dphi = Math.abs(p.phi - t.cphi);
-          if (dphi > Math.PI) dphi = twopi - dphi;
-          dphi -= r;
-        }
-        if (t.irap != p.t.irap) {
-          drap = Math.abs(p.rap - t.crap) - r;
-        }
-        
-        if ( p.Rij >= sq(dphi) + sq(drap) )
-          for (pseudoJet q=t.first; q!=null; q=q.tnext)
-            if (p.update_near(q, both)) q.update_dij();
-      }
-    }
-
-    private void within_tile_same(pseudoJet p, boolean both) {
-      for (pseudoJet q=p.t.first; q!=null; q=q.tnext)
-        if (q!=p)
-          if (p.update_near(q, both)) q.update_dij();
+      for (pseudoJet q=t.first; q!=null; q=q.tnext)
+        if (p.update_near(q, both)) q.update_dij();
     }
 
     public void update_near(pseudoJet p, boolean both) {
-      within_tile_same(p, both);
-      if ( p.Rij < sq(p.RiC1) ) return;
-    
-      for (int k=1; k<=ng; ++k) {
-        final int iphi_min = p.t.iphi - k,
-                  iphi_max = p.t.iphi + k,
-                  irap_min = p.t.irap - k,
-                  irap_max = p.t.irap + k;
+      // own tile
+      for (pseudoJet q=p.t.first; q!=null; q=q.tnext)
+        if (q!=p)
+          if (p.update_near(q, both)) q.update_dij();
 
-        int i = iphi_min;
+      final boolean // lazy
+        tl = ( sq(p.phi-p.t.cphi+r) < p.Rij ),
+        tr = ( sq(p.phi-p.t.cphi-r) < p.Rij ),
+        td = ( sq(p.rap-p.t.crap+r) < p.Rij ),
+        tu = ( sq(p.rap-p.t.crap-r) < p.Rij );
 
-        for (int j=Math.max(irap_min,0); j<=Math.min(irap_max,nrap-1); ++j)
-          within_tile(p, tiles[mod(i,nphi)][j], both);
-
-        for (++i; i<iphi_max; ++i) {
-          if (irap_min>=0)   within_tile(p, tiles[mod(i,nphi)][irap_min], both);
-          if (irap_max<nrap) within_tile(p, tiles[mod(i,nphi)][irap_max], both);
+      if (p.t.irap!=0) {
+        if (tl) { within_tile(p, tiles[p.t.iphi][p.t.irap-1], both);
+          if (tu) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap-1], both);
+          if (td) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap-1], both);
         }
-
-        //if (k>0)
-          for (int j=Math.max(irap_min,0); j<=Math.min(irap_max,nrap-1); ++j)
-            within_tile(p, tiles[mod(i,nphi)][j], both);
-
-        if ( Math.sqrt(p.Rij) < (p.RiC1 + d*k) ) return;
       }
-      
-      // left loop
-      for (int j=0; j<p.t.irap-ng; ++j)
-        for (int i=0; i<nphi; ++i)
-          within_tile(p, tiles[i][j], both);
-          
-      // right loop
-      for (int j=p.t.irap+ng+1; j<nrap; ++j)
-        for (int i=0; i<nphi; ++i)
-          within_tile(p, tiles[i][j], both);
+
+      if (tu) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap], both);
+      if (td) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap], both);
+
+      if (nrap-p.t.irap!=1) {
+        if (tr) { within_tile(p, tiles[p.t.iphi][p.t.irap+1], both);
+          if (tu) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap+1], both);
+          if (td) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap+1], both);
+        }
+      }
 
     }
   }
-  
+
   // ****************************************************************
   // Constructor ****************************************************
   public clusterSequence(boolean kt_alg, double jetR) {
@@ -230,7 +192,7 @@ class clusterSequence {
   public List<ParticleD> cluster(List<ParticleD> particles) {
     int n = particles.size();
     num = 0; // start assigning pseudoJet id from 0
-    
+
     // initialize the grid
     if (n>50) grid = new tileGrid(jetR,5);
 
@@ -277,7 +239,7 @@ class clusterSequence {
 
     // loop until pseudoJets are used up ------------------
     while (first != null) {
-    
+
       if (n<50) grid = null;
 
       double dist = Double.MAX_VALUE;
@@ -293,16 +255,16 @@ class clusterSequence {
 
         // merge particles
         p.merge();
-        
+
         // the new particle is first
         if (grid!=null) grid.add(first);
 
         // print clustering step
         // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, dist);
-        
+
         // recompute pairwise distances
         if (grid==null) { // no grid
-        
+
           // for the new pseudoJet
           for (pseudoJet q=first.next; q!=null; q=q.next)
             if ( first.update_near(q,true) ) q.update_dij();
@@ -311,7 +273,7 @@ class clusterSequence {
           // for the rest
           for (pseudoJet p1=first.next; p1!=null; p1=p1.next) {
             if (p1.near==p || p1.near==p.near) {
-              p1.Rij = Double.MAX_VALUE;
+              p1.rm_near();
               for (pseudoJet p2=first; p2!=null; p2=p2.next) {
                 if (p1!=p2) p1.update_near(p2,false);
               }
@@ -324,11 +286,11 @@ class clusterSequence {
           // for the new pseudoJet
           grid.update_near(first,true);
           first.update_dij();
-          
+
           // for the rest
           for (pseudoJet p1=first.next; p1!=null; p1=p1.next) {
             if (p1.near==p || p1.near==p.near) {
-              p1.Rij = Double.MAX_VALUE;
+              p1.rm_near();
               grid.update_near(p1,false);
               p1.update_dij();
             }
@@ -348,31 +310,31 @@ class clusterSequence {
 
         // recompute pairwise distances
         if (grid==null) { // no grid
-        
+
           for (pseudoJet p1=first; p1!=null; p1=p1.next) {
             if (p1.near==p) {
-              p1.Rij = Double.MAX_VALUE;
+              p1.rm_near();
               for (pseudoJet p2=first; p2!=null; p2=p2.next) {
                 if (p1!=p2) p1.update_near(p2,false);
               }
               p1.update_dij();
             }
           }
-          
+
         } else { // using grid
-        
+
           for (pseudoJet p1=first; p1!=null; p1=p1.next) {
             if (p1.near==p) {
-              p1.Rij = Double.MAX_VALUE;
+              p1.rm_near();
               grid.update_near(p1,false);
               p1.update_dij();
             }
           }
-        
+
         }
 
       }
-      
+
       --n;
 
     }
