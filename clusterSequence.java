@@ -27,10 +27,11 @@ class clusterSequence {
   // pseudoJet class ************************************************
   private class pseudoJet {
     public double px, py, pz, E, rap, phi, Rij, diB, dij;
-    public int id, np;
+    public int id;
     public pseudoJet prev, next, near;
     public tile t;
     public pseudoJet tprev, tnext;
+    public ArrayList<Integer> consts;
 
     public pseudoJet(double px, double py, double pz, double E) {
       this.px = px;
@@ -38,7 +39,6 @@ class clusterSequence {
       this.pz = pz;
       this.E  = E;
       this.id = num++;
-      this.np = 1; // number of constituent particles
 
       if (E==pz) rap = Double.MAX_VALUE;
       else if (E==-pz) rap = -Double.MAX_VALUE;
@@ -68,7 +68,20 @@ class clusterSequence {
       first.prev.next = first;
       first = first.prev;
 
-      first.np = this.np + near.np;
+      if (this.consts!=null || near.consts!=null) {
+        if (this.consts!=null) {
+          first.consts = this.consts;
+          if (near.consts!=null) first.consts.addAll(near.consts);
+          else first.consts.add(near.id);
+        } else {
+          first.consts = near.consts;
+          first.consts.add(this.id);
+        }
+      } else {
+        first.consts = new ArrayList<Integer>();
+        first.consts.add(this.id);
+        first.consts.add(near.id);
+      }
 
       this.remove();
       near.remove();
@@ -206,7 +219,7 @@ class clusterSequence {
     // initialize the grid
     use_grid = (n>50);
 
-    List<ParticleD> jets = new ArrayList<ParticleD>();
+    ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
     pseudoJet p;
 
     if (n==0) return jets;
@@ -317,6 +330,8 @@ class clusterSequence {
       } else {
         // identify as jet
         jets.add( new ParticleD( p.px, p.py, p.pz, p.E ) );
+        if (p.consts==null) jets.get(jets.size()-1).addConstituent(p.id);
+        else jets.get(jets.size()-1).addConstituents(p.consts);
 
         // print clustering step
         // System.out.format("%3d Jet   | d = %.5e\n", p.id, dist);
