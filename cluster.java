@@ -3,7 +3,7 @@ import java.io.*;
 
 class cluster {
   private static void usage() {
-    System.out.println("Usage: java cluster (anti)kt R file");
+    System.out.println("Usage: java cluster [kt,antikt,cambridge] R file");
     System.exit(1);
   }
 
@@ -11,14 +11,19 @@ class cluster {
     // check arguments
     if (args.length!=3) usage();
 
-    // set algorithm type, (anti)kt, and jet radius, R.
-    boolean kt_alg = false;
-    if (args[0].equals("kt")) kt_alg = true;
-    else if (!args[0].equals("antikt")) usage();
+    // set algorithm type and jet radius, R.
+    jetAlg jet_alg = null;
+    if (args[0].equalsIgnoreCase("kt")) jet_alg = jetAlg.kt;
+    else if (args[0].equalsIgnoreCase("antikt")) jet_alg = jetAlg.antikt;
+    else if (args[0].equalsIgnoreCase("cambridge")) jet_alg = jetAlg.cambridge;
+    else {
+      System.out.println("Unrecognized clustering algorithm: "+args[0]);
+      usage();
+    }
 
     // set up clustering algorithm
     clusterSequence seq = new clusterSequence(
-      kt_alg, Double.parseDouble(args[1])
+      jet_alg, Double.parseDouble(args[1])
     );
 
     List<ParticleD> pp = new ArrayList<ParticleD>();

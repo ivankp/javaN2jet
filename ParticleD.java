@@ -287,8 +287,8 @@ public class ParticleD implements Comparable<ParticleD>, Serializable {
 		return consts;
 	}
 
-	public void addConstituents(List<Integer> consts) {
-		this.consts.addAll(consts);
+	public void setConstituents(ArrayList<Integer> consts) {
+		this.consts = consts;
 	}
 
 	public void addConstituent(int i) {

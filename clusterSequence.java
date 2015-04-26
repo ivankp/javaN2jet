@@ -6,19 +6,19 @@ class clusterSequence {
   private final static double twopi = 2*Math.PI;
   private static double sq(double x) { return x*x; }
 
-  private boolean kt_alg;
-  private double  jetR2;
-  private int     num;
+  private jetAlg alg;
+  private double jetR2;
+  private int    num;
 
   private pseudoJet first;
-  private tileGrid grid;
-  private boolean use_grid;
+  private tileGrid  grid;
+  private boolean   use_grid;
 
   // ****************************************************************
   // Constructor ****************************************************
-  public clusterSequence(boolean kt_alg, double jetR) {
-    this.kt_alg = kt_alg;
-    this.jetR2  = jetR*jetR;
+  public clusterSequence(jetAlg alg, double jetR) {
+    this.alg = alg;
+    this.jetR2 = jetR*jetR;
 
     grid = new tileGrid(jetR,5);
   }
@@ -45,7 +45,11 @@ class clusterSequence {
       else rap = 0.5*Math.log((E+pz)/(E-pz));
       phi = (px == 0. && py == 0. ? 0. : Math.atan2(py,px)) + Math.PI;
 
-      diB = (kt_alg ? pt2() : 1./pt2());
+      switch (alg) {
+        case        kt: diB =    pt2(); break;
+        case    antikt: diB = 1./pt2(); break;
+        case cambridge: diB = 1.;       break;
+      }
       Rij = Double.MAX_VALUE;
     }
 
@@ -213,7 +217,7 @@ class clusterSequence {
   // ****************************************************************
   // clustering function ********************************************
   public List<ParticleD> cluster(List<ParticleD> particles) {
-    int n = particles.size();
+    final int n = particles.size();
     num = 0; // start assigning pseudoJet id from 0
 
     // initialize the grid
@@ -331,7 +335,7 @@ class clusterSequence {
         // identify as jet
         jets.add( new ParticleD( p.px, p.py, p.pz, p.E ) );
         if (p.consts==null) jets.get(jets.size()-1).addConstituent(p.id);
-        else jets.get(jets.size()-1).addConstituents(p.consts);
+        else jets.get(jets.size()-1).setConstituents(p.consts);
 
         // print clustering step
         // System.out.format("%3d Jet   | d = %.5e\n", p.id, dist);
@@ -366,7 +370,7 @@ class clusterSequence {
 
       }
 
-      --n;
+      //--n;
 
     }
 
