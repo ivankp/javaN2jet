@@ -125,7 +125,6 @@ class clusterSequence {
     public void rm_near() {
       near = null;
       Rij  = Double.MAX_VALUE;
-      //dij  = Double.MAX_VALUE;
     }
   }
 
