@@ -2,7 +2,7 @@
 
 all: cluster.class
 
-cluster.class: cluster.java clusterSequence.java jetAlg.java ParticleD.java
+cluster.class: cluster.java clusterSequence.java ParticleD.java
 	javac $^
 
 clean:

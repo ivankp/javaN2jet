@@ -6,7 +6,7 @@ class clusterSequence {
   private final static double twopi = 2*Math.PI;
   private static double sq(double x) { return x*x; }
 
-  private jetAlg alg;
+  private byte   alg;
   private double jetR2;
   private int    num;
 
@@ -16,8 +16,17 @@ class clusterSequence {
 
   // ****************************************************************
   // Constructor ****************************************************
-  public clusterSequence(jetAlg alg, double jetR) {
-    this.alg = alg;
+  public clusterSequence(String alg, double jetR) {
+    if (alg.equalsIgnoreCase("kt")) this.alg = 1;
+    else if (alg.equalsIgnoreCase("antikt")) this.alg = 2;
+    else if (alg.equalsIgnoreCase("cambridge")) this.alg = 3;
+    else {
+      System.out.println(
+        "Warning: Unrecognized clustering algorithm: "+alg+
+        ".\nDefaulting to antikt."
+      );
+      this.alg = 2;
+    }
     this.jetR2 = jetR*jetR;
 
     grid = new tileGrid(jetR,5);
@@ -46,9 +55,9 @@ class clusterSequence {
       phi = (px == 0. && py == 0. ? 0. : Math.atan2(py,px)) + Math.PI;
 
       switch (alg) {
-        case        kt: diB =    pt2(); break;
-        case    antikt: diB = 1./pt2(); break;
-        case cambridge: diB = 1.;       break;
+        case 1: diB =    pt2(); break; // kt
+        case 2: diB = 1./pt2(); break; // antikt
+        case 3: diB = 1.;       break; // cambridge
       }
       Rij = Double.MAX_VALUE;
     }
@@ -66,12 +75,14 @@ class clusterSequence {
     }
 
     public void merge() {
+      // add 4-momenta
       first.prev = new pseudoJet(
         px + near.px, py + near.py,
         pz + near.pz, E  + near.E );
       first.prev.next = first;
       first = first.prev;
 
+      // merge constituents
       if (this.consts!=null || near.consts!=null) {
         if (this.consts!=null) {
           first.consts = this.consts;
@@ -87,6 +98,7 @@ class clusterSequence {
         first.consts.add(near.id);
       }
 
+      // remove parent particles
       this.remove();
       near.remove();
     }

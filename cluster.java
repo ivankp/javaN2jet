@@ -2,28 +2,16 @@ import java.util.*;
 import java.io.*;
 
 class cluster {
-  private static void usage() {
-    System.out.println("Usage: java cluster [kt,antikt,cambridge] R file");
-    System.exit(1);
-  }
-
   public static void main(String[] args) throws IOException {
     // check arguments
-    if (args.length!=3) usage();
-
-    // set algorithm type and jet radius, R.
-    jetAlg jet_alg = null;
-    if (args[0].equalsIgnoreCase("kt")) jet_alg = jetAlg.kt;
-    else if (args[0].equalsIgnoreCase("antikt")) jet_alg = jetAlg.antikt;
-    else if (args[0].equalsIgnoreCase("cambridge")) jet_alg = jetAlg.cambridge;
-    else {
-      System.out.println("Unrecognized clustering algorithm: "+args[0]);
-      usage();
+    if (args.length!=3) {
+      System.out.println("Usage: java cluster [kt,antikt,cambridge] R file");
+      System.exit(1);
     }
 
-    // set up clustering algorithm
+    // set algorithm type and jet radius, R.
     clusterSequence seq = new clusterSequence(
-      jet_alg, Double.parseDouble(args[1])
+      args[0], Double.parseDouble(args[1])
     );
 
     List<ParticleD> pp = new ArrayList<ParticleD>();
