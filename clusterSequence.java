@@ -263,7 +263,7 @@ class clusterSequence {
     // loop until pseudoJets are used up ------------------
     while (first != null) {
 
-      if (n<50) use_grid = false;
+      //if (n<50) use_grid = false;
 
       double dist = Double.MAX_VALUE;
 
