@@ -388,7 +388,7 @@ class clusterSequence {
 
     // remove all particles --------------------------
     first = null;
-    grid.clear();
+    if (use_grid) grid.clear();
 
     return jets;
   }
