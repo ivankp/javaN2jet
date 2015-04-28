@@ -56,9 +56,12 @@ class clusterSequence {
 
       switch (alg) {
         case 1: diB =    pt2(); break; // kt
-        case 2: diB = 1./pt2(); break; // antikt
+        case 2: diB = 1./pt2();        // antikt
+                if (Double.isInfinite(diB)) diB = Double.MAX_VALUE;
+                break;
         case 3: diB = 1.;       break; // cambridge
       }
+      
       Rij = Double.MAX_VALUE;
     }
 
@@ -273,26 +276,34 @@ class clusterSequence {
     // calculate minimum pairwise distances ---------------
     for (p=first; p!=null; p=p.next) p.update_dij();
 
-    boolean merge = false;
-
     // loop until pseudoJets are used up ------------------
     while (first != null) {
 
       //if (n<50) use_grid = false;
 
-      double dist = Double.MAX_VALUE;
+      p = first;
+      double dist = p.diB;
+      boolean merge = false;
 
       // find smallest distance
       for (pseudoJet q=first; q!=null; q=q.next) {
-        if (q.dij < dist) { p = q; dist = q.dij; }
+        if (q.dij < dist) { p = q; dist = q.dij; merge = true; }
       }
-      merge = true;
 
       if (p.Rij > jetR2) {
-        for (pseudoJet q=first; q!=null; q=q.next) {
+        for (pseudoJet q=first.next; q!=null; q=q.next) {
           if (q.diB < dist) { p = q; dist = q.diB; merge = false; }
         }
       }
+
+/*
+      if (p.id==978) {
+        System.out.println("*****");
+        for (pseudoJet q=first; q!=null; q=q.next)
+          System.out.printf("%4d dij = %.5e  diB = %.5e\n",q.id,q.dij,q.diB);
+        System.out.println("*****");
+      }
+*/
 
       // Either merge or identify a jet
       if (merge) {
@@ -304,7 +315,7 @@ class clusterSequence {
         if (use_grid) grid.add(first);
 
         // print clustering step
-        // System.out.format("%3d & %3d | d = %.5e\n",p.id, p.near.id, dist);
+        // System.out.format("%4d & %4d | d = %.5e\n", p.id, p.near.id, dist);
 
         // recompute pairwise distances
         if (use_grid) { // using grid
@@ -344,12 +355,13 @@ class clusterSequence {
 
       } else {
         // identify as jet
-        jets.add( new ParticleD( p.px, p.py, p.pz, p.E ) );
-        if (p.consts==null) jets.get(jets.size()-1).addConstituent(p.id);
-        else jets.get(jets.size()-1).setConstituents(p.consts);
+        ParticleD jet = new ParticleD(p.px, p.py, p.pz, p.E);
+        jets.add(jet);
+        if (p.consts==null) jet.addConstituent(p.id);
+        else jet.setConstituents(p.consts);
 
         // print clustering step
-        // System.out.format("%3d Jet   | d = %.5e\n", p.id, dist);
+        // System.out.format("%4d Jet    | d = %.5e\n", p.id, dist);
 
         // "remove"
         p.remove();
