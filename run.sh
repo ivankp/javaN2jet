@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java cluster antikt 0.6 350.dat
+java cluster antikt 0.6 data/350.dat
