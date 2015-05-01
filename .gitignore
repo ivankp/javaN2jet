@@ -1,2 +1,12 @@
+# Java
 *.class
+
+# LaTeX
+/doc/*.aux
+/doc/*.lof
+/doc/*.log
+/doc/*.lot
+/doc/*.fls
+/doc/*.out
+/doc/*.toc
 

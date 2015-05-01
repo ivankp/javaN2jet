@@ -1,0 +1,89 @@
+\documentclass[12pt]{article}
+\usepackage[cm]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{indentfirst}
+\usepackage{upgreek}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=blue, urlcolor=blue}
+
+\newcommand{\eq}[1]{\hyperref[eq:#1]{Eq.~(\ref{eq:#1})}}
+\newcommand{\fig}[1]{\hyperref[fig:#1]{Fig.~\ref{fig:#1}}}
+\newcommand{\tab}[1]{\hyperref[table:#1]{Table~\ref{table:#1}}}
+\newcommand{\sect}[1]{\hyperref[sec:#1]{Section~\ref{sec:#1}}}
+\newcommand{\app}[1]{\hyperref[sec:#1]{Appendix~\ref{sec:#1}}}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+\title{Java implementation of $O(N^2)$ jet clustering algorithms}
+\author{Ivan Pogrebnyak, MSU, ANL}
+\date{\today}
+
+\makeatletter
+  \pagestyle{fancy}
+  \lhead{\@title}
+  \rhead{\@date}
+  \cfoot{\thepage}
+  \rfoot{\@author}
+\makeatother
+
+\def\headheight{15pt}
+\def\headsep{15pt}
+\def\textheight{650pt}
+
+\renewcommand{\footrulewidth}{0.4pt}
+
+\def\abovecaptionskip{3pt}
+\def\belowcaptionskip{2pt}
+
+\def\textsim{\raise.25ex\hbox{$\scriptstyle\sim$}}
+
+\begin{document}
+%\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+The motivation for developing an optimized Java based jet clustering algorithm, is to provide a platform independent implementation for use in online validation scripts on HepSim\cite{HepSim} repository with Monte Carlo predictions for HEP experiments.
+
+Currently, the most widely used implementation of jet clustering algorithms in high energy physics is FastJet\cite{fastjet_man}. Is it written in C++ and provides a highly optimized implementation of (anti)kt and Cambridge-Aachen jet finding algorithms with selectable $O(N^2)$ and $O(N\log N)$ complexities, which significantly reduce runtime in comparison to naive $O(N^3)$ algorithms\cite{fastjet_n3}.
+
+Unfortunately, platform dependence of C++ is prohibitive for use of FastJet in client-side web application  scripts. Therefore, a Java implementation was necessary.
+
+\section{Implementation}
+
+
+\subsection{Geometric Factorization}
+
+
+\subsection{Tiling}
+
+
+\subsection{Linked List}
+
+
+\begin{thebibliography}{9}
+  
+\bibitem{HepSim}
+  S.~V.~Chekanov,
+  %``HepSim: a repository with predictions for high-energy physics experiments,''
+  \href{http://arxiv.org/abs/1403.1886}{arXiv:1403.1886 [hep-ph]}.
+
+\bibitem{fastjet_man}
+  M.~Cacciari, G.~P.~Salam and G.~Soyez,
+  %``FastJet user manual,''
+  Eur.\ Phys.\ J.\ C {\bf 72} (2012) 1896
+  [\href{http://arxiv.org/abs/1111.6097}{arXiv:1111.6097 [hep-ph]}].
+
+\bibitem{fastjet_n3}
+  M.~Cacciari and G.~P.~Salam,
+  %``Dispelling the $N^{3}$ myth for the $k_t$ jet-finder,''
+  Phys.\ Lett.\ B\ {\bf 641} (2006) 57
+  [\href{http://arxiv.org/abs/hep-ph/0512210}{hep-ph/0512210}].
+
+\end{thebibliography}
+
+\end{document}
