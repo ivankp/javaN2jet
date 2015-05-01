@@ -52,7 +52,9 @@ class clusterSequence {
       if (E==pz) rap = Double.MAX_VALUE;
       else if (E==-pz) rap = -Double.MAX_VALUE;
       else rap = 0.5*Math.log((E+pz)/(E-pz));
+
       phi = (px == 0. && py == 0. ? 0. : Math.atan2(py,px)) + Math.PI;
+      if (phi >= twopi) phi -= twopi;
 
       switch (alg) {
         case 1: diB =    pt2(); break; // kt
