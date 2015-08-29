@@ -10,3 +10,6 @@
 /doc/*.out
 /doc/*.toc
 
+# Binary
+/fj_cmp
+

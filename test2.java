@@ -1,7 +1,7 @@
 import java.util.*;
 import java.io.*;
 
-class test {
+class test2 {
   public static void main(String[] args) throws IOException {
     // check arguments
     if (args.length!=10) {
@@ -35,6 +35,6 @@ class test {
 
     // print
     Collections.sort(jets);
-    for (ParticleD j: jets) System.out.format("%.8e\n",j.perp());
+    for (ParticleD j: jets) System.out.format("%.8e ",j.perp());
   }
 }
