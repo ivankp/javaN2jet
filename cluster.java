@@ -1,6 +1,10 @@
 import java.util.*;
 import java.io.*;
 
+/**
+ * @author Ivan Pogrebnyak
+ */
+
 class cluster {
   public static void main(String[] args) throws IOException {
     // check arguments

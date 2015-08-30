@@ -54,8 +54,8 @@ class clusterSequence {
       this.E  = E;
       this.id = num++;
 
-      double pt2 = px*px + py*py;
-      double abs_pz = (pz < 0. ? -pz : pz);
+      final double pt2 = px*px + py*py;
+      final double abs_pz = (pz < 0. ? -pz : pz);
 
       phi = (pt2 == 0. ? 0. : Math.atan2(py,px)) + Math.PI;
       if (phi >= twopi) phi -= twopi;
@@ -259,7 +259,8 @@ class clusterSequence {
     num = 0; // start assigning pseudoJet id from 0
 
     // initialize the grid
-    use_grid = (n>50);
+    // use_grid = (n>50);
+    use_grid = false;
 
     ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
     pseudoJet p;
