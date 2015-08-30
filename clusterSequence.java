@@ -1,6 +1,10 @@
 import java.util.*;
 import java.io.*;
 
+/**
+ * @author Ivan Pogrebnyak
+ */
+
 class clusterSequence {
 
   private final static double twopi = 2*Math.PI;

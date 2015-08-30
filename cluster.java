@@ -30,7 +30,7 @@ class cluster {
     for (int i=0; i<10; ++i) {
       long startTime = System.currentTimeMillis();
       jets = seq.cluster(pp);
-      System.out.println("Run time: " +
+      System.out.println("N2 run time: " +
         (System.currentTimeMillis()-startTime) + " ms"
       );
     }

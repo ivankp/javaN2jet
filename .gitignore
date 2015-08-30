@@ -11,6 +11,9 @@
 /doc/*.toc
 
 # Binary
-/fj_cmp
-/fj_test
+/fj/cmp
+/fj/one
+/fj/event
 
+# Output
+/*.out
