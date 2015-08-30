@@ -4,6 +4,7 @@ import java.io.*;
 class clusterSequence {
 
   private final static double twopi = 2*Math.PI;
+  private final static double max_rap = 1e5; // From FastJet
   private static double sq(double x) { return x*x; }
 
   private byte   alg;
@@ -49,21 +50,40 @@ class clusterSequence {
       this.E  = E;
       this.id = num++;
 
-      if (E==pz) rap = Double.MAX_VALUE;
-      else if (E==-pz) rap = -Double.MAX_VALUE;
-      else rap = 0.5*Math.log((E+pz)/(E-pz));
+      double pt2 = px*px + py*py;
+      double abs_pz = (pz < 0. ? -pz : pz);
 
-      phi = (px == 0. && py == 0. ? 0. : Math.atan2(py,px)) + Math.PI;
+      phi = (pt2 == 0. ? 0. : Math.atan2(py,px)) + Math.PI;
       if (phi >= twopi) phi -= twopi;
+      else if (phi < 0.) phi += twopi;
+
+      // Replicated FastJet rapidity calculation
+      // for compatibility in cases of unphysical 4-momenta
+      if (E == abs_pz && pt2 == 0.) {
+        // Point has infinite rapidity -- convert that into a very large
+        // number, but in such a way that different 0-pt momenta will have
+        // different rapidities (so as to lift the degeneracy between
+        // them) [this can be relevant at parton-level]
+        rap = max_rap + abs_pz;
+        if (pz < 0.) rap = -rap;
+      } else {
+        // get the rapidity in a way that's modestly insensitive to roundoff
+        // error when things pz,E are large (actually the best we can do without
+        // explicit knowledge of mass) and force non tachyonic mass
+        double m2_pt2 = (E+pz)*(E-pz);
+        if (m2_pt2 < pt2) m2_pt2 = pt2;
+        rap = 0.5*Math.log(m2_pt2/sq(E+abs_pz));
+        if (pz > 0.) rap = -rap;
+      }
 
       switch (alg) {
-        case 1: diB =    pt2(); break; // kt
-        case 2: diB = 1./pt2();        // antikt
-                if (Double.isInfinite(diB)) diB = Double.MAX_VALUE;
+        case 1: diB = pt2; break; // kt
+        case 2: if (pt2==0.) diB = Double.MAX_VALUE; // antikt
+                else diB = 1./pt2;
                 break;
-        case 3: diB = 1.;       break; // cambridge
+        case 3: diB = 1.; break; // cambridge
       }
-      
+
       Rij = Double.MAX_VALUE;
     }
 
@@ -107,8 +127,6 @@ class clusterSequence {
       this.remove();
       near.remove();
     }
-
-    public double pt2() { return px*px + py*py; }
 
     public boolean update_near(pseudoJet p, boolean both) {
       double deltaPhi = Math.abs(phi-p.phi);
@@ -297,15 +315,6 @@ class clusterSequence {
           if (q.diB < dist) { p = q; dist = q.diB; merge = false; }
         }
       }
-
-/*
-      if (p.id==978) {
-        System.out.println("*****");
-        for (pseudoJet q=first; q!=null; q=q.next)
-          System.out.printf("%4d dij = %.5e  diB = %.5e\n",q.id,q.dij,q.diB);
-        System.out.println("*****");
-      }
-*/
 
       // Either merge or identify a jet
       if (merge) {

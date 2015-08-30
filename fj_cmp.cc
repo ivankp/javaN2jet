@@ -15,8 +15,6 @@ using namespace fastjet;
 
 #include <TRandom3.h>
 
-using namespace std;
-
 string exec(const char* cmd) {
   FILE* pipe = popen(cmd, "r");
   if (!pipe) return "ERROR";
@@ -48,6 +46,7 @@ int main(int argc, char **argv)
   stringstream cmd_n2;
   cmd_n2 << "java test2 " << argv[1] << ' ' << argv[2];
 
+  long long cnt = 0;
   while (true) {
     // Generate 2 random 4-vectors
     timeval tv;
@@ -125,6 +124,10 @@ int main(int argc, char **argv)
            << " diB = " << diB(particles[1]) << '\n'
            << "dij = " << dij(particles[0],particles[1]) << '\n'
            << endl;
+    } else {
+      for (int i=0;i<9;++i) cout << '\b';
+      cout << setw(9) << ++cnt;
+      cout.flush();
     }
   }
 
