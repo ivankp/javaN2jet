@@ -191,13 +191,6 @@ class clusterSequence {
             irap, iphi,
             (irap-nrap/2)*d + r, iphi*d + r
           );
-
-      /*for (int irap=0; irap<=nrap; ++irap)
-        System.out.printf(" %f",(irap-nrap/2)*d);
-      System.out.println();
-      for (int iphi=0; iphi<=nphi; ++iphi)
-        System.out.printf(" %f",iphi*d);
-      System.out.println();*/
     }
 
     public void clear() {
@@ -239,13 +232,6 @@ class clusterSequence {
         tl = ( sq(p.rap-p.t.rapc+r) < p.Rij ),
         tr = ( sq(p.rap-p.t.rapc-r) < p.Rij );
         
-      /*System.out.println(p.id);
-      System.out.println(Math.sqrt(p.Rij));
-      System.out.println(td);
-      System.out.println(tu);
-      System.out.println(tl);
-      System.out.println(tr);*/
-
       if (p.t.irap!=0) {
         if (tl) { within_tile(p, tiles[p.t.iphi][p.t.irap-1], both);
           if (tu) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap-1], both);
@@ -269,12 +255,11 @@ class clusterSequence {
   // ****************************************************************
   // clustering function ********************************************
   public List<ParticleD> cluster(List<ParticleD> particles) {
-    final int n = particles.size();
+    int n = particles.size();
     num = 0; // start assigning pseudoJet id from 0
 
     // initialize the grid
-    // use_grid = (n>50);
-    use_grid = true;
+    use_grid = (n>50);
 
     ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
     pseudoJet p;
@@ -318,7 +303,7 @@ class clusterSequence {
     // loop until pseudoJets are used up ------------------
     while (first != null) {
 
-      //if (n<50) use_grid = false;
+      if (n<50) use_grid = false;
 
       p = first;
       double dist = p.diB;
@@ -423,7 +408,7 @@ class clusterSequence {
 
       }
 
-      //--n;
+      --n;
 
     }
 
