@@ -7,11 +7,11 @@ ROOT_LIBS   := $(shell root-config --libs)
 
 .PHONY: all clean
 
-EXE := cmp one event
+EXE := cmp one event step add
 
 all: $(EXE)
 
-one event: %: %.cc
+one event step add: %: %.cc
 	@echo CC $@
 	@g++ -std=c++11 -Wall -O3 $(FJ_CFLAGS) $^ -o $@ $(FJ_LIBS)
 

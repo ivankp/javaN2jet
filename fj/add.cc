@@ -1,6 +1,5 @@
 #include <iostream>
-#include <vector>
-#include <cmath>
+#include <iomanip>
 
 #include <fastjet/ClusterSequence.hh>
 
@@ -24,32 +23,14 @@ ostream& operator<<(ostream &out, const PseudoJet& p) {
 
 int main(int argc, char **argv)
 {
-  if (argc!=3) {
-    cout << "Usage: " << argv[0] << " algorithm radius" << endl;
-    return 1;
-  }
-
   // collect particles
-  vector<PseudoJet> p;
-  while (cin >> p) { };
+  vector<PseudoJet> particles;
+  while (cin >> particles) { };
+  
+  PseudoJet sum(0,0,0,0);
+  for (auto& p : particles) sum += p;
 
-  test(p[0])
-  test(p[1])
-
-  test(p[0].rap())
-  test((0.5*log((p[0].E()+p[0].pz())/(p[0].E()-p[0].pz()))))
-  test(p[0].phi())
-  test(p[0].pt())
-
-  test(p[1].rap())
-  test((0.5*log((p[1].E()+p[1].pz())/(p[1].E()-p[1].pz()))))
-  test(p[1].phi())
-  test(p[1].pt())
-
-  test(p[0].delta_R(p[1]))
-  auto pp = p[0]+p[1];
-  test(pp)
-  test(pp.pt())
+  cout << fixed << scientific << setprecision(8) << sum << endl;
 
   return 0;
 }

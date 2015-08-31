@@ -181,7 +181,7 @@ class clusterSequence {
       nphi = (int)(twopi/R);
       d = twopi/nphi;
       r = d/2;
-      nrap = 2*((int)(max_rap/r) + 1);
+      nrap = (int)(max_rap/r) + 1;
       this.max_rap = nrap*r;
 
       tiles = new tile[nphi][nrap];
@@ -191,6 +191,13 @@ class clusterSequence {
             irap, iphi,
             (irap-nrap/2)*d + r, iphi*d + r
           );
+
+      /*for (int irap=0; irap<=nrap; ++irap)
+        System.out.printf(" %f",(irap-nrap/2)*d);
+      System.out.println();
+      for (int iphi=0; iphi<=nphi; ++iphi)
+        System.out.printf(" %f",iphi*d);
+      System.out.println();*/
     }
 
     public void clear() {
@@ -227,10 +234,17 @@ class clusterSequence {
           if (p.update_near(q, both)) q.update_dij();
 
       final boolean // lazy
-        tl = ( sq(p.phi-p.t.phic+r) < p.Rij ),
-        tr = ( sq(p.phi-p.t.phic-r) < p.Rij ),
-        td = ( sq(p.rap-p.t.rapc+r) < p.Rij ),
-        tu = ( sq(p.rap-p.t.rapc-r) < p.Rij );
+        td = ( sq(p.phi-p.t.phic+r) < p.Rij ),
+        tu = ( sq(p.phi-p.t.phic-r) < p.Rij ),
+        tl = ( sq(p.rap-p.t.rapc+r) < p.Rij ),
+        tr = ( sq(p.rap-p.t.rapc-r) < p.Rij );
+        
+      /*System.out.println(p.id);
+      System.out.println(Math.sqrt(p.Rij));
+      System.out.println(td);
+      System.out.println(tu);
+      System.out.println(tl);
+      System.out.println(tr);*/
 
       if (p.t.irap!=0) {
         if (tl) { within_tile(p, tiles[p.t.iphi][p.t.irap-1], both);

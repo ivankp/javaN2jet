@@ -9,7 +9,7 @@ class test2 {
   public static void main(String[] args) throws IOException {
     // check arguments
     if (args.length<10) {
-      System.out.println("Usage: java cluster [kt,antikt,cambridge] R px1 py1 pz1 E1 px2 py2 pz2 E2 ...");
+      System.out.println("Usage: java test2 [kt,antikt,cambridge] R px1 py1 pz1 E1 px2 py2 pz2 E2 ...");
       System.exit(1);
     }
 

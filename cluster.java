@@ -31,13 +31,13 @@ class cluster {
 
     // perform jet clustering
     List<ParticleD> jets = null;
-    for (int i=0; i<10; ++i) {
+    //for (int i=0; i<10; ++i) {
       long startTime = System.currentTimeMillis();
       jets = seq.cluster(pp);
       System.out.println("N2 run time: " +
         (System.currentTimeMillis()-startTime) + " ms"
       );
-    }
+    //}
 
     // print
     Collections.sort(jets);
