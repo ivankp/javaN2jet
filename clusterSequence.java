@@ -248,18 +248,18 @@ class clusterSequence {
 
       if (p.t.irap!=0) {
         if (tl) { within_tile(p, tiles[p.t.iphi][p.t.irap-1], both);
-          if (tu) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap-1], both);
-          if (td) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap-1], both);
+          if (tu) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap-1], both);
+          if (td) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap-1], both);
         }
       }
 
-      if (tu) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap], both);
-      if (td) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap], both);
+      if (td) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap], both);
+      if (tu) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap], both);
 
       if (nrap-p.t.irap!=1) {
         if (tr) { within_tile(p, tiles[p.t.iphi][p.t.irap+1], both);
-          if (tu) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap+1], both);
-          if (td) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap+1], both);
+          if (tu) within_tile(p, tiles[nphi-p.t.iphi==1 ? 0 : p.t.iphi+1][p.t.irap+1], both);
+          if (td) within_tile(p, tiles[p.t.iphi==0 ? nphi-1 : p.t.iphi-1][p.t.irap+1], both);
         }
       }
 
