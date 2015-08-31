@@ -260,7 +260,7 @@ class clusterSequence {
 
     // initialize the grid
     // use_grid = (n>50);
-    use_grid = false;
+    use_grid = true;
 
     ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
     pseudoJet p;

@@ -8,8 +8,8 @@ import java.io.*;
 class test2 {
   public static void main(String[] args) throws IOException {
     // check arguments
-    if (args.length!=10) {
-      System.out.println("Usage: java cluster [kt,antikt,cambridge] R px1 py1 pz1 E1 px2 py2 pz2 E2");
+    if (args.length<10) {
+      System.out.println("Usage: java cluster [kt,antikt,cambridge] R px1 py1 pz1 E1 px2 py2 pz2 E2 ...");
       System.exit(1);
     }
 
@@ -20,18 +20,14 @@ class test2 {
 
     List<ParticleD> pp = new ArrayList<ParticleD>();
 
-    pp.add( new ParticleD(
-      Double.parseDouble(args[2]),
-      Double.parseDouble(args[3]),
-      Double.parseDouble(args[4]),
-      Double.parseDouble(args[5])
-    ) );
-    pp.add( new ParticleD(
-      Double.parseDouble(args[6]),
-      Double.parseDouble(args[7]),
-      Double.parseDouble(args[8]),
-      Double.parseDouble(args[9])
-    ) );
+    for (int i=0, n=(args.length-2)/4; i<n; ++i) {
+      pp.add( new ParticleD(
+        Double.parseDouble(args[2+i*4]),
+        Double.parseDouble(args[3+i*4]),
+        Double.parseDouble(args[4+i*4]),
+        Double.parseDouble(args[5+i*4])
+      ) );
+    }
 
     // perform jet clustering
     List<ParticleD> jets = null;

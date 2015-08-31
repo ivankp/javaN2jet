@@ -38,13 +38,15 @@ istream& operator>>(istream &in, vector<PseudoJet>& p) {
 
 int main(int argc, char **argv)
 {
-  if (argc!=3) {
-    cout << "Usage: " << argv[0] << " algorithm radius" << endl;
+  if (argc!=4) {
+    cout << "Usage: " << argv[0] << " algorithm radius N" << endl;
     return 1;
   }
 
+  const int np = atoi(argv[3]);
+
   stringstream cmd_n2;
-  cmd_n2 << "java test2 " << argv[1] << ' ' << argv[2];
+  cmd_n2 << "java -classpath .. test2 " << argv[1] << ' ' << argv[2];
 
   long long cnt = 0;
   while (true) {
@@ -54,7 +56,7 @@ int main(int argc, char **argv)
     TRandom3 r(tv.tv_usec);
     stringstream ps;
     ps << fixed << scientific << setprecision(8);
-    for (int i=0; i<8; ++i) ps << ' ' << r.Rndm();
+    for (int i=0, n=4*np; i<n; ++i) ps << ' ' << r.Rndm();
     const string ps_str( ps.str() );
 
     // FastJet **********************************************
@@ -117,13 +119,16 @@ int main(int argc, char **argv)
 
     if (out_n2!=out_fj) {
       cout << "FJ: " << out_fj << '\n'
-           << "N2: " << out_n2 << '\n'
-           << "p1: " << ps_str.substr(1,59)
-           << " diB = " << diB(particles[0]) << '\n'
-           << "p2: " << ps_str.substr(61)
-           << " diB = " << diB(particles[1]) << '\n'
-           << "dij = " << dij(particles[0],particles[1]) << '\n'
-           << endl;
+           << "N2: " << out_n2 << endl;
+        for (int i=0; i<np; ++i) {
+          cout << "p"<<i<<": " << ps_str.substr(i*60+1,59)
+               << " diB = " << diB(particles[i]) << endl;
+        }
+        for (int i=1; i<np; ++i)
+          for (int j=0; j<i; ++j)
+            cout << "d" << setw(3) << i << setw(3) << j
+                 << " = " << dij(particles[i],particles[j]) << endl;
+        cout << endl;
     } else {
       for (int i=0;i<9;++i) cout << '\b';
       cout << setw(9) << ++cnt;
