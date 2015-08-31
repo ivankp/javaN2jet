@@ -255,7 +255,7 @@ class clusterSequence {
   // ****************************************************************
   // clustering function ********************************************
   public List<ParticleD> cluster(List<ParticleD> particles) {
-    final int n = particles.size();
+    int n = particles.size();
     num = 0; // start assigning pseudoJet id from 0
 
     // initialize the grid
@@ -303,7 +303,10 @@ class clusterSequence {
     // loop until pseudoJets are used up ------------------
     while (first != null) {
 
-      //if (n<50) use_grid = false;
+      if (n<50) {
+        use_grid = false;
+        grid.clear();
+      }
 
       p = first;
       double dist = p.diB;
@@ -408,7 +411,7 @@ class clusterSequence {
 
       }
 
-      //--n;
+      --n;
 
     }
 
