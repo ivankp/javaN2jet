@@ -5,7 +5,7 @@ import java.io.*;
  * @author Ivan Pogrebnyak
  */
 
-class test2 {
+class Test {
   public static void main(String[] args) throws IOException {
     // check arguments
     if (args.length<10) {
@@ -14,7 +14,7 @@ class test2 {
     }
 
     // set algorithm type and jet radius, R.
-    clusterSequence seq = new clusterSequence(
+    ClusterSequence seq = new ClusterSequence(
       args[0], Double.parseDouble(args[1])
     );
 
