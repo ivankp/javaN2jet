@@ -2,9 +2,19 @@ import java.util.*;
 import java.io.*;
 
 /**
+ * Main class for jet clustering with generalized kt algorithms.
+ * Implements optimizations relevant to HEP events:
+ *   1. Geometric factorization -- reduces overall complexity to O(N^2).
+ *      http://arxiv.org/pdf/hep-ph/0512210.pdf
+ *      http://www.lpthe.jussieu.fr/~salam/repository/docs/kt-cgta-v2.pdf
+ *   2. Tiling -- optimizes the number of pairwise distances to compute.
+ *   3. Linked list -- optimizes insertion and deletion, O(1) complexity.
+ * Contains references to the first PseudeJet and y-phi TileGrid.
+ * Safe to only use one ClusterSequence instance per thread.
+ *
  * @author Ivan Pogrebnyak
+ *
  */
-
 class ClusterSequence {
 
   private final static double twopi = 2*Math.PI;
@@ -19,26 +29,35 @@ class ClusterSequence {
   private TileGrid  grid;
   private boolean   use_grid;
 
-  // ****************************************************************
-  // Constructor ****************************************************
+  /**
+   * ClusterSequence constructor.
+   * @param alg Select jet clustering algorithm. Accepted values are:
+   *         "kt": $d_{ij} = \min(k_{ti}^{-2},k_{tj}^{-2})\frac{\Delta^2_{ij}}{R^2}$
+   *     "antikt": $d_{ij} = \min(k_{ti}^{2},k_{tj}^{2})\frac{\Delta^2_{ij}}{R^2}$
+   *  "cambridge": $d_{ij} = \frac{\Delta^2_{ij}}{R^2}$
+   * @param jetR Algorithm radius parameter, R.
+   */
   public ClusterSequence(String alg, double jetR) {
     if (alg.equalsIgnoreCase("kt")) this.alg = 1;
-    else if (alg.equalsIgnoreCase("antikt")) this.alg = 2;
-    else if (alg.equalsIgnoreCase("cambridge")) this.alg = 3;
+    else if (alg.equalsIgnoreCase("antikt")) this.alg = -1;
+    else if (alg.equalsIgnoreCase("cambridge")) this.alg = 0;
     else {
       System.out.println(
         "Warning: Unrecognized clustering algorithm: "+alg+
         ".\nDefaulting to antikt."
       );
-      this.alg = 2;
+      this.alg = -1;
     }
     this.jetR2 = jetR*jetR;
 
     grid = new TileGrid(jetR,5);
   }
 
-  // ****************************************************************
-  // PseudoJet class ************************************************
+  /**
+   * private PseudoJet class.
+   * Combined 4-momentum and linked list node functionalities.
+   * Represents intermediate clustering sequence pseudo-jets.
+   */
   private class PseudoJet {
     public double px, py, pz, E, rap, phi, Rij, diB, dij;
     public int id;
@@ -81,11 +100,11 @@ class ClusterSequence {
       }
 
       switch (alg) {
-        case 1: diB = pt2; break; // kt
-        case 2: if (pt2==0.) diB = Double.MAX_VALUE; // antikt
-                else diB = 1./pt2;
-                break;
-        case 3: diB = 1.; break; // cambridge
+        case -1: if (pt2==0.) diB = Double.MAX_VALUE;
+                 else diB = 1./pt2; // antikt
+                 break;
+        case  1: diB = pt2; break;  // kt
+        case  0: diB = 1.;  break;  // cambridge
       }
 
       Rij = Double.MAX_VALUE;
@@ -155,8 +174,9 @@ class ClusterSequence {
     }
   }
 
-  // ****************************************************************
-  // tile class *****************************************************
+  /**
+   * private Tile class. Implements grid tile.
+   */
   class Tile {
     int irap, iphi;
     double rapc, phic; // center coordinates
@@ -169,8 +189,9 @@ class ClusterSequence {
     }
   }
 
-  // ****************************************************************
-  // tileGrid class *************************************************
+  /**
+   * private TileGrid class
+   */
   private class TileGrid {
     private final Tile[][] tiles;
     private final int nrap, nphi;
@@ -252,9 +273,13 @@ class ClusterSequence {
     }
   }
 
-  // ****************************************************************
-  // clustering function ********************************************
-  public List<ParticleD> cluster(List<ParticleD> particles) {
+  /**
+   * Form jets from particles in a single event.
+   * @param particles List of input particles.
+   * @param min_jet_pt Save output jets only with pT >= min_jet_pt.
+   * @return Clustered jets.
+   */
+  public List<ParticleD> cluster(List<ParticleD> particles, double min_jet_pt) {
     int n = particles.size();
     num = 0; // start assigning PseudoJet id from 0
 
@@ -373,16 +398,17 @@ class ClusterSequence {
 
       } else {
         // identify as jet
-        ParticleD jet = new ParticleD(p.px, p.py, p.pz, p.E);
-        jets.add(jet);
-        if (p.consts==null) jet.addConstituent(p.id);
-        else jet.setConstituents(p.consts);
+        if ( Math.sqrt(sq(p.px)+sq(p.py)) >= min_jet_pt ) {
+          ParticleD jet = new ParticleD(p.px, p.py, p.pz, p.E);
+          jets.add(jet);
+          if (p.consts==null) jet.addConstituent(p.id);
+          else jet.setConstituents(p.consts);
+        }
 
         // print clustering step
         // System.out.format("%4d Jet    | d = %.5e\n", p.id, dist);
 
-        // "remove"
-        p.remove();
+        p.remove(); // "remove"
 
         // recompute pairwise distances
         if (use_grid) { // using grid

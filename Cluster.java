@@ -33,7 +33,7 @@ class Cluster {
     List<ParticleD> jets = null;
     for (int i=0; i<10; ++i) {
       long startTime = System.currentTimeMillis();
-      jets = seq.cluster(pp);
+      jets = seq.cluster(pp,0.);
       System.out.println("N2 run time: " +
         (System.currentTimeMillis()-startTime) + " ms"
       );

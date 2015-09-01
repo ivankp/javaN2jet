@@ -31,7 +31,7 @@ class Test {
 
     // perform jet clustering
     List<ParticleD> jets = null;
-    jets = seq.cluster(pp);
+    jets = seq.cluster(pp,0.);
 
     // print
     Collections.sort(jets);
