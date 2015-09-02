@@ -11,7 +11,7 @@ all: $(EXE)
 
 $(EXE): %: %.cc
 	@echo CC $@
-	@g++ -std=c++11 -Wall -O3 $(FJ_CFLAGS) $^ -o $@ $(FJ_LIBS)
+	@g++ -std=c++11 -Wall -O3 $(FJ_CFLAGS) $^ -o $@ $(FJ_LIBS) -pthread
 
 clean:
 	@rm -fv $(EXE)

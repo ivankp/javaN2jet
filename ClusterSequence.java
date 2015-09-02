@@ -24,6 +24,10 @@ class ClusterSequence {
   private byte   alg;
   private double jetR2;
   private int    num;
+  
+  private int n_grid_on  = 50,
+              n_grid_off = 20;
+  private double rap_grid_extent = 5.;
 
   private PseudoJet first;
   private TileGrid  grid;
@@ -49,9 +53,31 @@ class ClusterSequence {
       this.alg = -1;
     }
     this.jetR2 = jetR*jetR;
-
-    grid = new TileGrid(jetR,5);
   }
+  
+  /**
+   * Set minimum initial number of particles in event for tiling be used.
+   * Default is 50.
+   */
+  public void setNGridOn (int n) { n_grid_on  = n; }
+
+  /**
+   * Set minimum intermediate number of remaining PseudoJets in the sequence
+   * at which tiling is no longer used.
+   * Default is 20.
+   */
+  public void setNGridOff(int n) { n_grid_off = n; }
+  
+  /**
+   * Set rapidity value past which PseudoJets are put in
+   * the respective overflow tile. The actual value may be
+   * larger, because tiles are square in the y-\phi plane,
+   * with the side length equal to the fraction of 2\pi
+   * closest to but larger then R parameter.
+   * Default is 5, meaning the grid extands between
+   * y<=-5 and y>=5.
+   */
+  public void setRapGridExtent(int rap) { rap_grid_extent = rap; }
 
   /**
    * private PseudoJet class.
@@ -284,7 +310,7 @@ class ClusterSequence {
     num = 0; // start assigning PseudoJet id from 0
 
     // initialize the grid
-    use_grid = (n>50);
+    use_grid = (n>n_grid_on);
 
     ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
     PseudoJet p;
@@ -297,7 +323,10 @@ class ClusterSequence {
       particles.get(0).pz(), particles.get(0).e ()
     );
     p = first;
-    if (use_grid) grid.add(p);
+    if (use_grid) {
+      if (grid==null) grid = new TileGrid(Math.sqrt(jetR2),rap_grid_extent);
+      grid.add(p);
+    }
     for (int i=1; i<n; ++i) {
       p.next = new PseudoJet(
         particles.get(i).px(), particles.get(i).py(),
@@ -328,7 +357,7 @@ class ClusterSequence {
     // loop until PseudoJets are used up ------------------
     while (first != null) {
 
-      if (n<20) {
+      if (use_grid && n<n_grid_off) {
         use_grid = false;
         grid.clear();
       }

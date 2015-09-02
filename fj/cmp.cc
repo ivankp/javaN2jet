@@ -6,6 +6,7 @@
 #include <functional>
 #include <chrono>
 #include <random>
+#include <future>
 #include <cstring>
 #include <cstdio>
 
@@ -75,6 +76,8 @@ int main(int argc, char **argv)
     return 1;
   }
   
+  JetDefinition jdef(jalg,R);
+  
   // mersenne twister random number generator
   mt19937 gen(chrono::system_clock::now().time_since_epoch().count());
   uniform_real_distribution<double> dist(0.0,1.0);
@@ -95,35 +98,40 @@ int main(int argc, char **argv)
     }
 
     // FastJet **********************************************
-
-    // collect particles
     vector<PseudoJet> particles;
-    while (ps >> particles) { };
 
-    // define ClusterSequence
-    ClusterSequence seq(particles, JetDefinition(jalg,R), false);
+    auto fut_fj = async(launch::async, [&ps,&jdef,&particles](){
+      // collect particles
+      while (ps >> particles) { };
 
-    // cluster jets
-    vector<PseudoJet> jets = seq.inclusive_jets();
+      // define ClusterSequence
+      ClusterSequence seq(particles, jdef, false);
 
-    // sort jets by pT
-    sort( jets.begin(), jets.end(),
-      [](const PseudoJet& i, const PseudoJet& j)
-        { return i.pt() > j.pt(); }
-    );
+      // cluster jets
+      vector<PseudoJet> jets = seq.inclusive_jets();
 
-    const string out_fj = [&jets](){
+      // sort jets by pT
+      sort( jets.begin(), jets.end(),
+        [](const PseudoJet& i, const PseudoJet& j)
+          { return i.pt() > j.pt(); }
+      );
+
       stringstream ss_fj;
       ss_fj << fixed << scientific << setprecision(8);
       for (auto& jet : jets) ss_fj << jet.pt() << ' ';
       return ss_fj.str();
-    }();
+    });
 
     // n2jet_java *******************************************
 
-    const string out_n2 = exec((cmd_n2.str()+ps_str).c_str());
+    auto fut_n2 = async(launch::async, [&cmd_n2,&ps_str](){
+      return exec((cmd_n2.str()+ps_str).c_str());
+    });
 
     // Print output *****************************************
+    
+    const string out_fj = fut_fj.get();
+    const string out_n2 = fut_n2.get();
 
     if (out_n2!=out_fj || !np) {
       cout << "FJ: " << out_fj << '\n'
