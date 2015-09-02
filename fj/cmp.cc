@@ -4,16 +4,15 @@
 #include <array>
 #include <vector>
 #include <functional>
+#include <chrono>
+#include <random>
 #include <cstring>
 #include <cstdio>
-#include <sys/time.h>
 
 #include <fastjet/ClusterSequence.hh>
 
 using namespace std;
 using namespace fastjet;
-
-#include <TRandom3.h>
 
 string exec(const char* cmd) {
   FILE* pipe = popen(cmd, "r");
@@ -46,7 +45,7 @@ int main(int argc, char **argv)
   const int np = (argc>3 ? atoi(argv[3]) : 0);
 
   stringstream cmd_n2;
-  cmd_n2 << "java -classpath .. test2 " << argv[1] << ' ' << argv[2];
+  cmd_n2 << "java -classpath .. Test " << argv[1] << ' ' << argv[2];
 
   const double R = atof(argv[2]);
   JetAlgorithm jalg;
@@ -76,9 +75,9 @@ int main(int argc, char **argv)
     return 1;
   }
   
-  timeval tv;
-  gettimeofday(&tv, nullptr);
-  TRandom3 r(tv.tv_usec);
+  // mersenne twister random number generator
+  mt19937 gen(chrono::system_clock::now().time_since_epoch().count());
+  uniform_real_distribution<double> dist(0.0,1.0);
 
   long long cnt = 0;
   while (true) {
@@ -88,7 +87,7 @@ int main(int argc, char **argv)
     // Generate 2 random 4-vectors
     if (np) {
       ps << fixed << scientific << setprecision(8);
-      for (int i=0, n=4*np; i<n; ++i) ps << ' ' << r.Rndm();
+      for (int i=0, n=4*np; i<n; ++i) ps << ' ' << dist(gen);
       ps_str = ps.str();
     } else {
       while (cin >> ps_str) { ps <<' '<< ps_str; }

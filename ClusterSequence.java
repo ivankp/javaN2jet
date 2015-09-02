@@ -328,7 +328,7 @@ class ClusterSequence {
     // loop until PseudoJets are used up ------------------
     while (first != null) {
 
-      if (n<50) {
+      if (n<20) {
         use_grid = false;
         grid.clear();
       }
