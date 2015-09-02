@@ -9,6 +9,7 @@
 #include <future>
 #include <cstring>
 #include <cstdio>
+#include <cmath>
 
 #include <fastjet/ClusterSequence.hh>
 
@@ -89,8 +90,24 @@ int main(int argc, char **argv)
   
     // Generate 2 random 4-vectors
     if (np) {
-      ps << fixed << scientific << setprecision(8);
-      for (int i=0, n=4*np; i<n; ++i) ps << ' ' << dist(gen);
+      ps << right << fixed << scientific << setprecision(8);
+
+      // generate physical particles
+      for (int i=0, n=np; i<n; ++i) {
+        double m, pt,
+               eta = 10.*(acos(1.-2.*dist(gen))/M_PI-0.5),
+               phi = 2.*M_PI*dist(gen);
+        while (!isfinite(pt = 10.-150.*log(1.-dist(gen)))) { }
+        while (!isfinite(m  =     -20.*log(1.-dist(gen)))) { }
+
+        double px = pt*cos(phi),
+               py = pt*sin(phi),
+               pz = pt*sinh(eta),
+               E  = sqrt(px*px+py*py+pz*pz+m*m);
+        
+        ps << setw(16) << px << setw(16) << py
+           << setw(16) << pz << setw(16) << E;
+      }
       ps_str = ps.str();
     } else {
       while (cin >> ps_str) { ps <<' '<< ps_str; }
@@ -137,7 +154,7 @@ int main(int argc, char **argv)
       cout << "FJ: " << out_fj << '\n'
            << "N2: " << out_n2 << endl;
         for (size_t i=0; i<particles.size(); ++i) {
-          cout << "p"<<i<<": " << ps_str.substr(i*60+1,59)
+          cout << "p"<<i<<": " << ps_str.substr(i*64+1,63)
                << " diB = " << diB(particles[i]) << endl;
         }
         for (size_t i=1; i<particles.size(); ++i)

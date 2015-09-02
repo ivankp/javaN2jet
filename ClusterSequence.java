@@ -310,7 +310,8 @@ class ClusterSequence {
     num = 0; // start assigning PseudoJet id from 0
 
     // initialize the grid
-    use_grid = (n>n_grid_on);
+    //use_grid = (n>n_grid_on);
+    use_grid = true;
 
     ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
     PseudoJet p;
@@ -357,10 +358,10 @@ class ClusterSequence {
     // loop until PseudoJets are used up ------------------
     while (first != null) {
 
-      if (use_grid && n<n_grid_off) {
+      /*if (use_grid && n<n_grid_off) {
         use_grid = false;
         grid.clear();
-      }
+      } else { --n; }*/
 
       p = first;
       double dist = p.diB;
@@ -460,8 +461,6 @@ class ClusterSequence {
         }
 
       }
-
-      --n;
 
     }
 
