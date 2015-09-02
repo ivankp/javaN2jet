@@ -369,12 +369,7 @@ class ClusterSequence {
       // find smallest distance
       for (PseudoJet q=first; q!=null; q=q.next) {
         if (q.dij < dist) { p = q; dist = q.dij; merge = true; }
-      }
-
-      if (p.Rij > jetR2) {
-        for (PseudoJet q=first.next; q!=null; q=q.next) {
-          if (q.diB < dist) { p = q; dist = q.diB; merge = false; }
-        }
+        if (q.diB < dist) { p = q; dist = q.diB; merge = false; }
       }
 
       // Either merge or identify a jet

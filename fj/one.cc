@@ -36,13 +36,13 @@ int main(int argc, char **argv)
   test(p[0])
   test(p[1])
 
-  test(p[0].rap())
   test((0.5*log((p[0].E()+p[0].pz())/(p[0].E()-p[0].pz()))))
+  test(p[0].rap())
   test(p[0].phi())
   test(p[0].pt())
 
-  test(p[1].rap())
   test((0.5*log((p[1].E()+p[1].pz())/(p[1].E()-p[1].pz()))))
+  test(p[1].rap())
   test(p[1].phi())
   test(p[1].pt())
 
