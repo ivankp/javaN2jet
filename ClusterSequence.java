@@ -24,7 +24,7 @@ class ClusterSequence {
   private byte   alg;
   private double jetR2;
   private int    num;
-  
+
   private int n_grid_on  = 50,
               n_grid_off = 20;
   private double rap_grid_extent = 5.;
@@ -54,7 +54,7 @@ class ClusterSequence {
     }
     this.jetR2 = jetR*jetR;
   }
-  
+
   /**
    * Set minimum initial number of particles in event for tiling be used.
    * Default is 50.
@@ -67,7 +67,7 @@ class ClusterSequence {
    * Default is 20.
    */
   public void setNGridOff(int n) { n_grid_off = n; }
-  
+
   /**
    * Set rapidity value past which PseudoJets are put in
    * the respective overflow tile. The actual value may be
@@ -310,7 +310,7 @@ class ClusterSequence {
     num = 0; // start assigning PseudoJet id from 0
 
     // initialize the grid
-    //use_grid = (n>n_grid_on);
+    use_grid = (n>n_grid_on);
     use_grid = true;
 
     ArrayList<ParticleD> jets = new ArrayList<ParticleD>();
@@ -358,10 +358,10 @@ class ClusterSequence {
     // loop until PseudoJets are used up ------------------
     while (first != null) {
 
-      /*if (use_grid && n<n_grid_off) {
+      if (use_grid && n<n_grid_off) {
         use_grid = false;
         grid.clear();
-      } else { --n; }*/
+      } else { --n; }
 
       p = first;
       double dist = p.diB;

@@ -76,9 +76,9 @@ int main(int argc, char **argv)
     cerr << "Undefined algorithm " << argv[1] << endl;
     return 1;
   }
-  
+
   JetDefinition jdef(jalg,R);
-  
+
   // mersenne twister random number generator
   mt19937 gen(chrono::system_clock::now().time_since_epoch().count());
   uniform_real_distribution<double> dist(0.0,1.0);
@@ -87,12 +87,12 @@ int main(int argc, char **argv)
   while (true) {
     stringstream ps;
     string ps_str;
-  
-    // Generate 2 random 4-vectors
+
+    // Generate random 4-vectors
     if (np) {
       ps << right << fixed << scientific << setprecision(8);
 
-      // generate physical particles
+      // generate physical pp
       for (int i=0, n=np; i<n; ++i) {
         double m, pt,
                eta = 10.*(acos(1.-2.*dist(gen))/M_PI-0.5),
@@ -104,25 +104,25 @@ int main(int argc, char **argv)
                py = pt*sin(phi),
                pz = pt*sinh(eta),
                E  = sqrt(px*px+py*py+pz*pz+m*m);
-        
+
         ps << setw(16) << px << setw(16) << py
            << setw(16) << pz << setw(16) << E;
       }
       ps_str = ps.str();
     } else {
-      while (cin >> ps_str) { ps <<' '<< ps_str; }
+      while (cin >> ps_str) { ps <<setw(16)<< ps_str; }
       ps_str = ps.str();
     }
 
     // FastJet **********************************************
-    vector<PseudoJet> particles;
+    vector<PseudoJet> pp;
 
-    auto fut_fj = async(launch::async, [&ps,&jdef,&particles](){
+    auto fut_fj = async(launch::async, [&ps,&jdef,&pp](){
       // collect particles
-      while (ps >> particles) { };
+      while (ps >> pp) { };
 
       // define ClusterSequence
-      ClusterSequence seq(particles, jdef, false);
+      ClusterSequence seq(pp, jdef, false);
 
       // cluster jets
       vector<PseudoJet> jets = seq.inclusive_jets();
@@ -146,28 +146,28 @@ int main(int argc, char **argv)
     });
 
     // Print output *****************************************
-    
+
     const string out_fj = fut_fj.get();
     const string out_n2 = fut_n2.get();
 
     if (out_n2!=out_fj || !np) {
       cout << "FJ: " << out_fj << '\n'
            << "N2: " << out_n2 << endl;
-        for (size_t i=0; i<particles.size(); ++i) {
-          cout << "p"<<i<<": " << ps_str.substr(i*64+1,63)
-               << " diB = " << diB(particles[i]) << endl;
-        }
-        for (size_t i=1; i<particles.size(); ++i)
-          for (size_t j=0; j<i; ++j)
-            cout << "d" << setw(3) << i << setw(3) << j
-                 << " = " << dij(particles[i],particles[j]) << endl;
-        cout << endl;
+      for (size_t i=0; i<pp.size(); ++i) {
+        cout << "p"<<i<<": " << ps_str.substr(i*64+1,63)
+             << " diB = " << diB(pp[i]) << endl;
+      }
+      for (size_t i=1; i<pp.size(); ++i)
+        for (size_t j=0; j<i; ++j)
+          cout << "d" << setw(3) << i << setw(3) << j
+               << " = " << dij(pp[i],pp[j]) << endl;
+      cout << endl;
     } else {
       for (int i=0;i<9;++i) cout << '\b';
       cout << setw(9) << ++cnt;
       cout.flush();
     }
-    
+
     if (!np) break;
   }
 

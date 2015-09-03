@@ -11,10 +11,12 @@
 /doc/*.toc
 
 # Binary
-/fj/cmp
-/fj/one
-/fj/event
 /fj/add
+/fj/benchmark
+/fj/cmp
+/fj/cmpjni
+/fj/event
+/fj/one
 /fj/step
 
 # Output
