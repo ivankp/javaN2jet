@@ -69,13 +69,13 @@ gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], hspace=0)
 ax1 = plt.subplot(gs[0])
 ax1.loglog(basex=2,nonposy='clip')
 ax1.errorbar(x, n2y, yerr=n2err, fmt='bo', label='N2jet Java')
-ax1.errorbar(x, fjy, yerr=fjerr, fmt='mo', label='FastJet C++')
+ax1.errorbar(x, fjy, yerr=fjerr, fmt='ms', label='FastJet C++')
 ax1.plot(x[:5], fpoly1(x[:5], *par1), 'r-',
          label="fit $%.1fN+%.1f$" % (np.exp(par1[1]),par1[0]))
 ax1.plot(x[4:], fpoly2(x[4:], *par2), 'g-',
          label="fit $%.4fN^{2}+%.2fN+%.0f$" % (par2[0],par2[1],par2[2]))
 ax1.set_ylim([5e-1, 1e4])
-ax1.set_ylabel('mean single event clusterization time, mks')
+ax1.set_ylabel('Mean single event clusterization time [mks]')
 plt.legend(loc=2)
 
 ax2 = plt.subplot(gs[1], sharex=ax1)
@@ -86,12 +86,18 @@ ax2.scatter(x, ratio)
 ax2.set_ylim([0, 5.5])
 ax2.set_yticks(np.arange(0, 6, 1))
 ax2.axhline(avg, linestyle='--')
-ax2.set_ylabel('$t_\mathtt{N2}/t_\mathtt{FJ}$', fontsize=18)
+ax2.axhline(1, linestyle='--', color='black')
+ax2.set_ylabel('$t_\mathtt{N2}/t_\mathtt{FJ}$', fontsize=18, labelpad=15)
 
 plt.xlim([1.7, 1300])
 for tick in ax2.xaxis.get_major_ticks():
     tick.label.set_fontsize(14)
-plt.xlabel('number of particles per event', fontsize=15)
+plt.xlabel('Number of particles per event, $N$', fontsize=15)
+plt.setp(ax1.get_xticklabels(), visible=False)
+
+plt.text(0.5, 0.51, 'average',
+         transform=ax2.transAxes, fontsize=14, color='blue',
+         verticalalignment='bottom', horizontalalignment='center')
 
 plt.tight_layout()
 plt.savefig('benchmark.pdf')
